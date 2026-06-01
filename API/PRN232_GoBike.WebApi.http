@@ -1,0 +1,6 @@
+@PRN232_GoBike.WebApi_HostAddress = http://localhost:5229
+
+GET {{PRN232_GoBike.WebApi_HostAddress}}/weatherforecast/
+Accept: application/json
+
+###
