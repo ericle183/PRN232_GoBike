@@ -1,0 +1,8 @@
+<Solution>
+  <Project Path="BusinessObjects\BusinessObjects.csproj" Type="ClassicCSProj" />
+  <Project Path="DataAccessObjects\DataAccessObjects.csproj" Type="ClassicCSProj" />
+  <Project Path="Repositories\Repositories.csproj" Type="ClassicCSProj" />
+  <Project Path="Services\Services.csproj" Type="ClassicCSProj" />
+  <Project Path="API\API.csproj" Type="ClassicWebSDK" />
+  <Project Path="WebUI\WebUI.csproj" Type="ClassicWebSDK" />
+</Solution>
