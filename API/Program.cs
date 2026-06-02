@@ -16,16 +16,11 @@ if (string.IsNullOrWhiteSpace(connectionString))
 builder.Services.AddDbContext<AppDbContext>(options =>
     options.UseSqlServer(connectionString));
 
-builder.Services.AddSingleton<IRepository<User>, UserRepository>();
-builder.Services.AddSingleton<IUserRepository, UserRepository>();
-builder.Services.AddSingleton<IRepository<MotorcycleType>, MotorcycleTypeRepository>();
-builder.Services.AddSingleton<IMotorcycleTypeRepository, MotorcycleTypeRepository>();
-builder.Services.AddSingleton<IRepository<Motorcycle>, MotorcycleRepository>();
-builder.Services.AddSingleton<IMotorcycleRepository, MotorcycleRepository>();
-builder.Services.AddSingleton<IRepository<Customer>, CustomerRepository>();
-builder.Services.AddSingleton<ICustomerRepository, CustomerRepository>();
-builder.Services.AddSingleton<IRepository<RentalContract>, RentalContractRepository>();
-builder.Services.AddSingleton<IRentalContractRepository, RentalContractRepository>();
+builder.Services.AddScoped<IUserRepository, UserRepository>();
+builder.Services.AddScoped<IMotorcycleTypeRepository, MotorcycleTypeRepository>();
+builder.Services.AddScoped<IMotorcycleRepository, MotorcycleRepository>();
+builder.Services.AddScoped<ICustomerRepository, CustomerRepository>();
+builder.Services.AddScoped<IRentalContractRepository, RentalContractRepository>();
 
 builder.Services.AddScoped<IUserService, UserService>();
 builder.Services.AddScoped<IMotorcycleTypeService, MotorcycleTypeService>();
