@@ -86,10 +86,10 @@
             {
                 var badgeClass = item.Status switch
                 {
-                    MotorcycleStatus.Available => "bg-success",
-                    MotorcycleStatus.Reserved => "bg-primary",
-                    MotorcycleStatus.Rented => "bg-warning text-dark",
-                    MotorcycleStatus.Maintenance => "bg-secondary",
+                    MotorcycleStatus.Available => "badge-available",
+                    MotorcycleStatus.Reserved => "badge-reserved",
+                    MotorcycleStatus.Rented => "badge-rented",
+                    MotorcycleStatus.Maintenance => "badge-maintenance",
                     _ => "bg-light text-dark"
                 };
 
@@ -104,6 +104,8 @@
                     <td>@item.Color</td>
                     <td>@item.Mileage.ToString("#,##0") km</td>
                     <td>
+                        <a asp-page="./Details" asp-route-id="@item.Id"
+                           class="btn btn-sm btn-outline-info">View</a>
                         <button class="btn btn-sm btn-outline-primary btn-edit"
                                 data-bs-toggle="modal" data-bs-target="#editModal"
                                 data-id="@item.Id"
