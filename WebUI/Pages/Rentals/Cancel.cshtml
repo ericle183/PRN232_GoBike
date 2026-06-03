@@ -1,0 +1,41 @@
+@page "{id:int?}"
+@model WebUI.Pages.Rentals.CancelModel
+@{
+    ViewData["Title"] = "Rentals / Cancel";
+}
+
+<div class="d-flex justify-content-between align-items-center mb-4">
+    <h1 class="h4 mb-0">Cancel Rental</h1>
+    <a asp-page="Details" asp-route-id="@Model.Rental.Id" class="btn btn-outline-secondary">Back</a>
+</div>
+
+@if (!string.IsNullOrEmpty(Model.ErrorMessage))
+{
+    <div class="alert alert-danger">@Model.ErrorMessage</div>
+}
+
+<div class="card border-danger">
+    <div class="card-header bg-danger text-white">
+        <h2 class="h6 mb-0">Confirm Cancellation</h2>
+    </div>
+    <div class="card-body">
+        <p>Are you sure you want to cancel this rental contract? The motorcycle will be set back to <strong>Available</strong>.</p>
+
+        <dl class="row mb-0">
+            <dt class="col-sm-4 text-muted">Customer</dt>
+            <dd class="col-sm-8">@Model.Rental.CustomerFullName</dd>
+
+            <dt class="col-sm-4 text-muted">Motorcycle</dt>
+            <dd class="col-sm-8">@Model.Rental.MotorcycleLicensePlate</dd>
+
+            <dt class="col-sm-4 text-muted">Current Status</dt>
+            <dd class="col-sm-8">@WebUI.Pages.Rentals.CancelModel.GetStatusName(Model.Rental.Status)</dd>
+        </dl>
+    </div>
+    <div class="card-footer">
+        <form method="post">
+            <button type="submit" class="btn btn-danger">Confirm Cancel</button>
+            <a asp-page="Details" asp-route-id="@Model.Rental.Id" class="btn btn-outline-secondary">Back</a>
+        </form>
+    </div>
+</div>

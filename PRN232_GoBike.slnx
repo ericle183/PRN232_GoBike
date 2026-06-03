@@ -1,8 +1,9 @@
 <Solution>
-  <Project Path="BusinessObjects\BusinessObjects.csproj" Type="ClassicCSProj" />
-  <Project Path="DataAccessObjects\DataAccessObjects.csproj" Type="ClassicCSProj" />
-  <Project Path="Repositories\Repositories.csproj" Type="ClassicCSProj" />
-  <Project Path="Services\Services.csproj" Type="ClassicCSProj" />
-  <Project Path="API\API.csproj" Type="ClassicWebSDK" />
-  <Project Path="WebUI\WebUI.csproj" Type="ClassicWebSDK" />
+  <Project Path="BusinessObjects\BusinessObjects.csproj" Type="C#" />
+  <Project Path="DataAccessObjects\DataAccessObjects.csproj" Type="C#" />
+  <Project Path="Repositories\Repositories.csproj" Type="C#" />
+  <Project Path="Services\Services.csproj" Type="C#" />
+  <Project Path="API\API.csproj" Type="C#" />
+  <Project Path="WebUI.Tests/WebUI.Tests.csproj" />
+  <Project Path="WebUI\WebUI.csproj" Type="C#" />
 </Solution>

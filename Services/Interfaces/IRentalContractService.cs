@@ -9,4 +9,7 @@ public interface IRentalContractService
     Task CreateAsync(RentalContract rentalContract);
     Task UpdateAsync(RentalContract rentalContract);
     Task DeleteAsync(int id);
+    Task ActivateAsync(int id, int startMileage);
+    Task CompleteAsync(int id, DateTime actualReturnDate, int endMileage);
+    Task CancelAsync(int id);
 }
