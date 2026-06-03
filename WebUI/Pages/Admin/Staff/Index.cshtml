@@ -1,0 +1,242 @@
+@page
+@model WebUI.Pages.Admin.Staff.IndexModel
+@{
+    ViewData["Title"] = "Staff Users";
+    Layout = "/Views/Shared/_LayoutAdmin.cshtml";
+}
+
+
+<div class="d-flex justify-content-between align-items-center mb-4">
+    <h2 class="mb-0">Staff Users</h2>
+    <button type="button" class="btn btn-primary" data-bs-toggle="modal" data-bs-target="#staffModal" onclick="openAddModal()">+ Add Staff</button>
+</div>
+
+@if (!string.IsNullOrEmpty(Model.SuccessMessage))
+{
+    <div class="alert alert-success alert-dismissible fade show" role="alert">
+        @Model.SuccessMessage
+        <button type="button" class="btn-close" data-bs-dismiss="alert"></button>
+    </div>
+}
+
+@if (!string.IsNullOrEmpty(Model.ErrorMessage))
+{
+    <div class="alert alert-danger alert-dismissible fade show" role="alert">
+        @Model.ErrorMessage
+        <button type="button" class="btn-close" data-bs-dismiss="alert"></button>
+    </div>
+}
+
+<div class="card shadow-sm">
+    <div class="card-body p-0">
+        <table class="table table-hover mb-0">
+            <thead class="table-light">
+                <tr>
+                    <th>Username</th>
+                    <th>Full Name</th>
+                    <th>Email</th>
+                    <th>Status</th>
+                    <th>Created</th>
+                    <th class="text-end">Actions</th>
+                </tr>
+            </thead>
+            <tbody>
+                @if (Model.StaffUsers.Count == 0)
+                {
+                    <tr>
+                        <td colspan="6" class="text-center text-muted py-4">No staff users found.</td>
+                    </tr>
+                }
+                else
+                {
+                    @foreach (var user in Model.StaffUsers)
+                    {
+                        <tr>
+                            <td><code>@user.Username</code></td>
+                            <td>@user.FullName</td>
+                            <td>@(user.Email ?? "-")</td>
+                            <td>
+                                @if (user.IsActive)
+                                {
+                                    <span class="badge bg-success">Active</span>
+                                }
+                                else
+                                {
+                                    <span class="badge bg-secondary">Inactive</span>
+                                }
+                            </td>
+                            <td>@user.CreatedAt.ToString("dd/MM/yyyy")</td>
+                            <td class="text-end">
+                                <button type="button" class="btn btn-sm btn-outline-primary" onclick="openEditModal(@user.Id, '@user.Username', '@user.FullName', '@user.Email', @(user.IsActive.ToString().ToLower()))">Edit</button>
+                                <form method="post" asp-page-handler="Delete" asp-route-id="@user.Id" class="d-inline"
+                                      onsubmit="return confirm('Delete staff user @user.Username?');">
+                                    <button type="submit" class="btn btn-sm btn-outline-danger">Delete</button>
+                                </form>
+                            </td>
+                        </tr>
+                    }
+                }
+            </tbody>
+        </table>
+    </div>
+</div>
+
+<!-- Staff Modal -->
+<div class="modal fade" id="staffModal" tabindex="-1" aria-labelledby="staffModalLabel" aria-hidden="true" data-bs-backdrop="static">
+    <div class="modal-dialog modal-dialog-centered">
+        <div class="modal-content shadow">
+            <div class="modal-header">
+                <h5 class="modal-title" id="staffModalLabel">Add Staff User</h5>
+                <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+            </div>
+            <div class="modal-body">
+                <form id="staffForm" method="post" asp-page-handler="Save">
+                    @Html.AntiForgeryToken()
+                    <div asp-validation-summary="ModelOnly" class="text-danger mb-3"></div>
+                    <input type="hidden" id="staffId" name="staffId" value="" />
+                    
+                    <div class="mb-3">
+                        <label for="username" class="form-label">Username</label>
+                        <input type="text" class="form-control" id="username" name="username" required />
+                        <span class="text-danger" id="usernameError"></span>
+                    </div>
+
+                    <div class="mb-3" id="passwordGroup">
+                        <label for="password" class="form-label">Password</label>
+                        <input type="password" class="form-control" id="password" name="password" />
+                        <span class="text-danger" id="passwordError"></span>
+                    </div>
+
+                    <div class="mb-3">
+                        <label for="fullName" class="form-label">Full Name</label>
+                        <input type="text" class="form-control" id="fullName" name="fullName" required />
+                        <span class="text-danger" id="fullNameError"></span>
+                    </div>
+
+                    <div class="mb-3">
+                        <label for="email" class="form-label">Email</label>
+                        <input type="email" class="form-control" id="email" name="email" />
+                        <span class="text-danger" id="emailError"></span>
+                    </div>
+
+                    <div class="form-check mb-3">
+                        <input type="checkbox" class="form-check-input" id="isActive" name="isActive" checked>
+                        <label class="form-check-label" for="isActive">Active account</label>
+                    </div>
+
+                    <div class="d-flex justify-content-end gap-2">
+                        <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Cancel</button>
+                        <button type="submit" class="btn btn-primary" id="submitBtn">Create</button>
+                    </div>
+                </form>
+            </div>
+        </div>
+    </div>
+</div>
+
+@section Scripts {
+    <partial name="_ValidationScriptsPartial" />
+    <script>
+        const staffModal = new bootstrap.Modal(document.getElementById('staffModal'));
+
+        function openAddModal() {
+            document.getElementById('staffModalLabel').textContent = 'Add Staff User';
+            document.getElementById('staffForm').reset();
+            document.getElementById('staffId').value = '';
+            document.getElementById('username').removeAttribute('disabled');
+            document.getElementById('password').setAttribute('required', '');
+            document.getElementById('passwordGroup').style.display = 'block';
+            document.getElementById('submitBtn').textContent = 'Create';
+            clearErrors();
+        }
+
+        function openEditModal(id, username, fullName, email, isActive) {
+            document.getElementById('staffModalLabel').textContent = 'Edit Staff: ' + username;
+            document.getElementById('staffId').value = id;
+            document.getElementById('username').value = username;
+            document.getElementById('username').setAttribute('disabled', 'disabled');
+            document.getElementById('fullName').value = fullName;
+            document.getElementById('email').value = email || '';
+            document.getElementById('isActive').checked = isActive;
+            document.getElementById('password').removeAttribute('required');
+            document.getElementById('passwordGroup').style.display = 'block';
+            document.getElementById('submitBtn').textContent = 'Save';
+            clearErrors();
+            staffModal.show();
+        }
+
+        function clearErrors() {
+            document.querySelectorAll('.text-danger').forEach(el => {
+                if (el.id !== 'usernameError' && el.id !== 'passwordError' && 
+                    el.id !== 'fullNameError' && el.id !== 'emailError') {
+                    el.textContent = '';
+                }
+            });
+            document.getElementById('usernameError').textContent = '';
+            document.getElementById('passwordError').textContent = '';
+            document.getElementById('fullNameError').textContent = '';
+            document.getElementById('emailError').textContent = '';
+        }
+
+        // Handle form submission via AJAX
+        document.getElementById('staffForm').addEventListener('submit', async function(e) {
+            e.preventDefault();
+            
+            const staffId = document.getElementById('staffId').value;
+            const username = document.getElementById('username').value;
+            const password = document.getElementById('password').value;
+            const fullName = document.getElementById('fullName').value;
+            const email = document.getElementById('email').value;
+            const isActive = document.getElementById('isActive').checked;
+
+            clearErrors();
+
+            const formData = new FormData();
+            formData.append('username', username);
+            formData.append('password', password);
+            formData.append('fullName', fullName);
+            formData.append('email', email);
+            formData.append('isActive', isActive);
+
+            let url, method;
+            if (staffId) {
+                url = `/Admin/Staff?handler=Update&id=${staffId}`;
+                method = 'PUT';
+            } else {
+                url = '/Admin/Staff?handler=Save';
+                method = 'POST';
+            }
+
+            try {
+                const response = await fetch(url, {
+                    method: method,
+                    body: formData,
+                    headers: {
+                        'RequestVerificationToken': document.querySelector('input[name="__RequestVerificationToken"]')?.value || ''
+                    }
+                });
+
+                const result = await response.json();
+
+                if (response.ok && result.success) {
+                    staffModal.hide();
+                    window.location.reload();
+                } else {
+                    if (result.errors) {
+                        if (result.errors.username) document.getElementById('usernameError').textContent = result.errors.username;
+                        if (result.errors.password) document.getElementById('passwordError').textContent = result.errors.password;
+                        if (result.errors.fullName) document.getElementById('fullNameError').textContent = result.errors.fullName;
+                        if (result.errors.email) document.getElementById('emailError').textContent = result.errors.email;
+                    } else if (result.message) {
+                        alert(result.message);
+                    } else {
+                        alert('An error occurred. Please try again.');
+                    }
+                }
+            } catch (error) {
+                console.error('Error:', error);
+                alert('An error occurred. Please try again.');
+            }
+        });
+    </script>
+}

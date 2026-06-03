@@ -1,0 +1,155 @@
+@page
+@using WebUI.Helpers
+@model WebUI.Pages.Account.ProfileModel
+@{
+    ViewData["Title"] = "User Profile";
+    Layout = AuthorizationHelper.GetLayoutPath(User) == "_LayoutAdmin"
+        ? "/Views/Shared/_LayoutAdmin.cshtml"
+        : "/Views/Shared/_LayoutStaff.cshtml";
+}
+
+<div class="container mt-5">
+    <div class="row justify-content-center">
+        <div class="col-md-8">
+            <div class="card shadow">
+                <div class="card-header bg-dark text-white">
+                    <h3 class="mb-0">
+                        <i class="bi bi-person-circle"></i> User Profile
+                    </h3>
+                </div>
+                <div class="card-body p-4">
+                    @if (!string.IsNullOrEmpty(Model.ErrorMessage))
+                    {
+                        <div class="alert alert-danger alert-dismissible fade show" role="alert">
+                            <i class="bi bi-exclamation-circle"></i> @Model.ErrorMessage
+                            <button type="button" class="btn-close" data-bs-dismiss="alert"></button>
+                        </div>
+                    }
+
+                    @if (Model.UserProfile != null)
+                    {
+                        <div class="row mb-4">
+                            <div class="col-md-3 text-center">
+                                <div class="avatar-placeholder" style="width: 150px; height: 150px; background: linear-gradient(135deg, #667eea 0%, #764ba2 100%); border-radius: 50%; display: flex; align-items: center; justify-content: center; color: white; font-size: 60px; margin: 0 auto;">
+                                    <i class="bi bi-person"></i>
+                                </div>
+                            </div>
+                            <div class="col-md-9">
+                                <table class="table table-borderless">
+                                    <tbody>
+                                        <tr>
+                                            <td class="fw-bold">Username:</td>
+                                            <td>
+                                                <code>@Model.UserProfile.Username</code>
+                                            </td>
+                                        </tr>
+                                        <tr>
+                                            <td class="fw-bold">Full Name:</td>
+                                            <td>@Model.UserProfile.FullName</td>
+                                        </tr>
+                                        <tr>
+                                            <td class="fw-bold">Email:</td>
+                                            <td>
+                                                <a href="mailto:@Model.UserProfile.Email">@Model.UserProfile.Email</a>
+                                            </td>
+                                        </tr>
+                                        <tr>
+                                            <td class="fw-bold">Role:</td>
+                                            <td>
+                                                @if (Model.UserProfile.RoleName == "Admin")
+                                                {
+                                                    <span class="badge bg-danger">@Model.UserProfile.RoleName</span>
+                                                }
+                                                else if (Model.UserProfile.RoleName == "Staff")
+                                                {
+                                                    <span class="badge bg-info">@Model.UserProfile.RoleName</span>
+                                                }
+                                                else
+                                                {
+                                                    <span class="badge bg-secondary">@Model.UserProfile.RoleName</span>
+                                                }
+                                            </td>
+                                        </tr>
+                                        <tr>
+                                            <td class="fw-bold">Status:</td>
+                                            <td>
+                                                @if (Model.UserProfile.IsActive)
+                                                {
+                                                    <span class="badge bg-success">Active</span>
+                                                }
+                                                else
+                                                {
+                                                    <span class="badge bg-danger">Inactive</span>
+                                                }
+                                            </td>
+                                        </tr>
+                                        <tr>
+                                            <td class="fw-bold">Member Since:</td>
+                                            <td>@Model.UserProfile.CreatedAt.ToString("MMMM dd, yyyy")</td>
+                                        </tr>
+                                    </tbody>
+                                </table>
+                            </div>
+                        </div>
+
+                        <hr>
+
+                        <div class="row">
+                            <div class="col-md-12">
+                                <h5>Account Information</h5>
+                                <ul class="list-unstyled">
+                                    <li class="mb-2">
+                                        <strong>User ID:</strong> #@Model.UserProfile.Id
+                                    </li>
+                                    <li class="mb-2">
+                                        <strong>Account Type:</strong> 
+                                        @if (Model.UserProfile.RoleName == "Admin")
+                                        {
+                                            <span>Administrator - Full system access</span>
+                                        }
+                                        else if (Model.UserProfile.RoleName == "Staff")
+                                        {
+                                            <span>Staff Member - Limited access</span>
+                                        }
+                                    </li>
+                                    <li class="mb-2">
+                                        <strong>Joined:</strong> @Model.UserProfile.CreatedAt.ToString("MMMM dd, yyyy HH:mm")
+                                    </li>
+                                </ul>
+                            </div>
+                        </div>
+
+                        <hr>
+
+                        <div class="row">
+                            <div class="col-md-12">
+                                <a href="/" class="btn btn-secondary">
+                                    <i class="bi bi-arrow-left"></i> Back to Home
+                                </a>
+                                <a href="/Account/Logout" class="btn btn-danger float-end">
+                                    <i class="bi bi-box-arrow-right"></i> Logout
+                                </a>
+                            </div>
+                        </div>
+                    }
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<style>
+    .card {
+        border: none;
+    }
+    .card-header {
+        border-radius: 10px 10px 0 0;
+    }
+    .table td {
+        padding: 12px 0;
+        border-bottom: 1px solid #f0f0f0;
+    }
+    .table td:first-child {
+        width: 150px;
+    }
+</style>

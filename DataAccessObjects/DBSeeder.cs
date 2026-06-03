@@ -32,6 +32,7 @@ public static class DBSeeder
             },
         };
         await context.Users.AddRangeAsync(users);
+        await context.SaveChangesAsync();
 
         // --- 2. MotorcycleTypes ---
         var types = new List<MotorcycleType>
@@ -41,6 +42,7 @@ public static class DBSeeder
             new() { Name = "Xe phân khối lớn",Description = "Xe phân khối lớn từ 150cc trở lên",           DefaultDailyRate = 250_000m, IsActive = true },
         };
         await context.MotorcycleTypes.AddRangeAsync(types);
+        await context.SaveChangesAsync();
 
         // --- 3. Motorcycles (10 sample) ---
         var motorcycles = new List<Motorcycle>
@@ -57,6 +59,7 @@ public static class DBSeeder
             new() { LicensePlate = "47L-01234", Brand = "Kawasaki",  Model = "Z125",      VehicleTypeId = 3, Status = BusinessObjects.Enums.MotorcycleStatus.Available,   DailyRate = 350_000m, Color = "Xanh",  Mileage = 1800,  RegistrationNo = "REG-010", IsActive = true, CreatedAt = new DateTime(2026, 6, 1) },
         };
         await context.Motorcycles.AddRangeAsync(motorcycles);
+        await context.SaveChangesAsync();
 
         // --- 4. Customers (10 sample) ---
         var customers = new List<Customer>
@@ -73,13 +76,15 @@ public static class DBSeeder
             new() { FullName = "Trịnh Ngọc Minh", CCCD = "079206037890", PhoneNumber = "0932123456", Email = "minh.tn@gmail.com",      Address = "21 Phạm Hồng Thái, Q1",          DateOfBirth = new DateTime(1991, 2, 28),  DriverLicenseNo = "DL037890", IsActive = true, CreatedAt = new DateTime(2026, 6, 1) },
         };
         await context.Customers.AddRangeAsync(customers);
+        await context.SaveChangesAsync();
 
         // --- 5. RentalContracts (5 sample) ---
+        // Create contracts using entity references so EF sets FK automatically
         var contracts = new List<RentalContract>
         {
             new()
             {
-                CustomerId = 1, MotorcycleId = 1,
+                Id = 1, CustomerId = 1, MotorcycleId = 1,
                 RentalDate = new DateTime(2026, 5, 25, 8, 0, 0, DateTimeKind.Utc),
                 ExpectedReturnDate = new DateTime(2026, 5, 28, 20, 0, 0, DateTimeKind.Utc),
                 ActualReturnDate = new DateTime(2026, 5, 28, 18, 0, 0, DateTimeKind.Utc),
@@ -91,7 +96,7 @@ public static class DBSeeder
             },
             new()
             {
-                CustomerId = 3, MotorcycleId = 3,
+                Id = 2, CustomerId = 3, MotorcycleId = 3,
                 RentalDate = new DateTime(2026, 6, 1, 9, 0, 0, DateTimeKind.Utc),
                 ExpectedReturnDate = new DateTime(2026, 6, 5, 20, 0, 0, DateTimeKind.Utc),
                 DailyRate = 110_000m, TotalAmount = 440_000m, DepositAmount = 300_000m, FinalAmount = 0,
@@ -102,7 +107,7 @@ public static class DBSeeder
             },
             new()
             {
-                CustomerId = 5, MotorcycleId = 8,
+                Id = 3, CustomerId = 5, MotorcycleId = 8,
                 RentalDate = new DateTime(2026, 6, 3, 8, 0, 0, DateTimeKind.Utc),
                 ExpectedReturnDate = new DateTime(2026, 6, 6, 20, 0, 0, DateTimeKind.Utc),
                 DailyRate = 180_000m, TotalAmount = 540_000m, DepositAmount = 400_000m, FinalAmount = 0,
@@ -112,7 +117,7 @@ public static class DBSeeder
             },
             new()
             {
-                CustomerId = 7, MotorcycleId = 2,
+                Id = 4, CustomerId = 7, MotorcycleId = 2,
                 RentalDate = new DateTime(2026, 5, 20, 8, 0, 0, DateTimeKind.Utc),
                 ExpectedReturnDate = new DateTime(2026, 5, 22, 20, 0, 0, DateTimeKind.Utc),
                 ActualReturnDate = new DateTime(2026, 5, 24, 14, 0, 0, DateTimeKind.Utc),
@@ -124,7 +129,7 @@ public static class DBSeeder
             },
             new()
             {
-                CustomerId = 9, MotorcycleId = 5,
+                Id = 5, CustomerId = 9, MotorcycleId = 5,
                 RentalDate = new DateTime(2026, 5, 28, 8, 0, 0, DateTimeKind.Utc),
                 ExpectedReturnDate = new DateTime(2026, 5, 30, 20, 0, 0, DateTimeKind.Utc),
                 DailyRate = 150_000m, TotalAmount = 300_000m, DepositAmount = 200_000m, FinalAmount = 0,
@@ -134,7 +139,6 @@ public static class DBSeeder
             },
         };
         await context.RentalContracts.AddRangeAsync(contracts);
-
         await context.SaveChangesAsync();
     }
 }
