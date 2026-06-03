@@ -26,7 +26,7 @@ public class CreateModel : PageModel
             return Page();
 
         var (success, _, error) = await apiClient.CreateStaffUserAsync(Input);
-        var redirect = ApiPageHelper.RedirectIfApiSessionExpired(this, error);
+        var redirect = await ApiPageHelper.HandleApiAuthFailureAsync(this, error, apiClient);
         if (redirect != null)
             return redirect;
 

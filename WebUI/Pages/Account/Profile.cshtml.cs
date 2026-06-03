@@ -25,7 +25,7 @@ public class ProfileModel : PageModel
     public async Task<IActionResult> OnGetAsync()
     {
         var (success, profile, error) = await apiClient.GetProfileAsync();
-        var redirect = ApiPageHelper.RedirectIfApiSessionExpired(this, error);
+        var redirect = await ApiPageHelper.HandleApiAuthFailureAsync(this, error, apiClient);
         if (redirect != null)
             return redirect;
 

@@ -35,8 +35,10 @@ builder.Services.AddAuthentication(CookieAuthenticationDefaults.AuthenticationSc
         options.LoginPath = "/api/auth/login";
         options.LogoutPath = "/api/auth/logout";
         options.AccessDeniedPath = "/api/auth/access-denied";
-        options.ExpireTimeSpan = TimeSpan.FromDays(7);
+        options.ExpireTimeSpan = TimeSpan.FromHours(12);
         options.SlidingExpiration = true;
+        options.Cookie.HttpOnly = true;
+        options.Cookie.SameSite = SameSiteMode.Lax;
     });
 
 builder.Services.AddAuthorization(options =>

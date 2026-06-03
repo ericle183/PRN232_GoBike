@@ -23,7 +23,7 @@ public class IndexModel : PageModel
     {
         SuccessMessage = message;
         var (success, users, error) = await apiClient.GetStaffUsersAsync();
-        var redirect = ApiPageHelper.RedirectIfApiSessionExpired(this, error);
+        var redirect = await ApiPageHelper.HandleApiAuthFailureAsync(this, error, apiClient);
         if (redirect != null)
             return redirect;
 
@@ -40,7 +40,7 @@ public class IndexModel : PageModel
     public async Task<IActionResult> OnPostDeleteAsync(int id)
     {
         var (success, error) = await apiClient.DeleteStaffUserAsync(id);
-        var redirect = ApiPageHelper.RedirectIfApiSessionExpired(this, error);
+        var redirect = await ApiPageHelper.HandleApiAuthFailureAsync(this, error, apiClient);
         if (redirect != null)
             return redirect;
 

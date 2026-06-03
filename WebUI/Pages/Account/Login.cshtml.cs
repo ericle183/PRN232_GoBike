@@ -12,11 +12,16 @@ namespace WebUI.Pages.Account;
 public class LoginModel : PageModel
 {
     private readonly IGoBikeApiClient apiClient;
+    private readonly IApiCookieAccessor apiCookieAccessor;
     private readonly ILogger<LoginModel> logger;
 
-    public LoginModel(IGoBikeApiClient apiClient, ILogger<LoginModel> logger)
+    public LoginModel(
+        IGoBikeApiClient apiClient,
+        IApiCookieAccessor apiCookieAccessor,
+        ILogger<LoginModel> logger)
     {
         this.apiClient = apiClient;
+        this.apiCookieAccessor = apiCookieAccessor;
         this.logger = logger;
     }
 
@@ -25,10 +30,18 @@ public class LoginModel : PageModel
 
     public string? ErrorMessage { get; set; }
 
-    public IActionResult OnGet()
+    public async Task<IActionResult> OnGetAsync(string? returnUrl = null)
     {
-        if (User.Identity?.IsAuthenticated == true)
+        if (User.Identity?.IsAuthenticated == true && HasValidApiSession())
+        {
+            if (!string.IsNullOrEmpty(returnUrl) && Url.IsLocalUrl(returnUrl))
+                return LocalRedirect(returnUrl);
+
             return RedirectToRoleHome();
+        }
+
+        if (User.Identity?.IsAuthenticated == true)
+            await SignOutLocalAsync();
 
         return Page();
     }
@@ -63,8 +76,7 @@ public class LoginModel : PageModel
             new ClaimsPrincipal(new ClaimsIdentity(claims, CookieAuthenticationDefaults.AuthenticationScheme)),
             new AuthenticationProperties
             {
-                IsPersistent = true,
-                ExpiresUtc = DateTimeOffset.UtcNow.AddDays(7)
+                IsPersistent = false
             });
 
         logger.LogInformation("User {Username} logged in via API", user.Username);
@@ -77,10 +89,19 @@ public class LoginModel : PageModel
             : RedirectToPage("/Index");
     }
 
+    private bool HasValidApiSession()
+        => !string.IsNullOrEmpty(apiCookieAccessor.GetCookieHeader());
+
     private IActionResult RedirectToRoleHome()
     {
         return User.IsInRole(UserRole.Admin.ToString())
             ? RedirectToPage("/Admin/Staff/Index")
             : RedirectToPage("/Index");
+    }
+
+    private async Task SignOutLocalAsync()
+    {
+        await apiClient.LogoutAsync();
+        await HttpContext.SignOutAsync(CookieAuthenticationDefaults.AuthenticationScheme);
     }
 }

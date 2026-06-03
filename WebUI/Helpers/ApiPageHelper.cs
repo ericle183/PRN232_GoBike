@@ -1,11 +1,17 @@
+using Microsoft.AspNetCore.Authentication;
+using Microsoft.AspNetCore.Authentication.Cookies;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.AspNetCore.Mvc.RazorPages;
+using WebUI.Services;
 
 namespace WebUI.Helpers;
 
 public static class ApiPageHelper
 {
-    public static IActionResult? RedirectIfApiSessionExpired(PageModel page, string? error)
+    public static async Task<IActionResult?> HandleApiAuthFailureAsync(
+        PageModel page,
+        string? error,
+        IGoBikeApiClient apiClient)
     {
         if (string.IsNullOrEmpty(error))
             return null;
@@ -13,9 +19,9 @@ public static class ApiPageHelper
         if (!error.Contains("đăng nhập lại", StringComparison.OrdinalIgnoreCase))
             return null;
 
-        return page.RedirectToPage("/Account/Login", new
-        {
-            returnUrl = page.HttpContext.Request.Path + page.HttpContext.Request.QueryString
-        });
+        await apiClient.LogoutAsync();
+        await page.HttpContext.SignOutAsync(CookieAuthenticationDefaults.AuthenticationScheme);
+
+        return page.RedirectToPage("/Account/Login");
     }
 }

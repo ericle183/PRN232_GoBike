@@ -26,7 +26,7 @@ public class EditModel : PageModel
     public async Task<IActionResult> OnGetAsync(int id)
     {
         var (success, user, error) = await apiClient.GetStaffUserAsync(id);
-        var redirect = ApiPageHelper.RedirectIfApiSessionExpired(this, error);
+        var redirect = await ApiPageHelper.HandleApiAuthFailureAsync(this, error, apiClient);
         if (redirect != null)
             return redirect;
 
@@ -51,7 +51,7 @@ public class EditModel : PageModel
         }
 
         var (success, _, error) = await apiClient.UpdateStaffUserAsync(id, Input);
-        var redirect = ApiPageHelper.RedirectIfApiSessionExpired(this, error);
+        var redirect = await ApiPageHelper.HandleApiAuthFailureAsync(this, error, apiClient);
         if (redirect != null)
             return redirect;
 

@@ -48,8 +48,7 @@ public class AuthController : ControllerBase
             new ClaimsPrincipal(new ClaimsIdentity(claims, CookieAuthenticationDefaults.AuthenticationScheme)),
             new AuthenticationProperties
             {
-                IsPersistent = true,
-                ExpiresUtc = DateTimeOffset.UtcNow.AddDays(7)
+                IsPersistent = false
             });
 
         return Ok(new ApiLoginResult
