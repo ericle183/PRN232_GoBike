@@ -1,10 +1,12 @@
 using BusinessObjects.Entities;
+using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
 using Services.DTOs;
 using Services.Interfaces;
 
 namespace API.Controllers;
 
+[Authorize(Roles = "Admin,Staff")]
 [ApiController]
 [Route("api/[controller]")]
 public class RentalContractController : ControllerBase
@@ -101,6 +103,7 @@ public class RentalContractController : ControllerBase
         });
     }
 
+    [Authorize(Roles = "Admin")]
     [HttpPost]
     public async Task<ActionResult> Create([FromBody] RentalContractCreateDto dto)
     {
@@ -125,6 +128,7 @@ public class RentalContractController : ControllerBase
         return CreatedAtAction(nameof(GetById), new { id = rental.Id }, rental);
     }
 
+    [Authorize(Roles = "Admin")]
     [HttpPut("{id}")]
     public async Task<ActionResult> Update(int id, [FromBody] RentalContractUpdateDto dto)
     {
@@ -159,6 +163,7 @@ public class RentalContractController : ControllerBase
         return NoContent();
     }
 
+    [Authorize(Roles = "Admin")]
     [HttpDelete("{id}")]
     public async Task<ActionResult> Delete(int id)
     {
@@ -166,6 +171,7 @@ public class RentalContractController : ControllerBase
         return NoContent();
     }
 
+    [Authorize(Roles = "Admin")]
     [HttpPut("{id}/activate")]
     public async Task<ActionResult> Activate(int id, [FromQuery] int startMileage)
     {
@@ -173,6 +179,7 @@ public class RentalContractController : ControllerBase
         return NoContent();
     }
 
+    [Authorize(Roles = "Admin")]
     [HttpPut("{id}/complete")]
     public async Task<ActionResult> Complete(int id, [FromQuery] DateTime actualReturnDate, [FromQuery] int endMileage)
     {
@@ -180,6 +187,7 @@ public class RentalContractController : ControllerBase
         return NoContent();
     }
 
+    [Authorize(Roles = "Admin")]
     [HttpPut("{id}/cancel")]
     public async Task<ActionResult> Cancel(int id)
     {

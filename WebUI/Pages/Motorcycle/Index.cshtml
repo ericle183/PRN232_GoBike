@@ -1,15 +1,25 @@
 @page
 @model WebUI.Pages.Motorcycle.IndexModel
 @using BusinessObjects.Enums
+@using WebUI.Helpers
 @{
     ViewData["Title"] = "Motorcycle Management";
+    if (User.Identity?.IsAuthenticated == true)
+    {
+        Layout = AuthorizationHelper.GetLayoutPath(User) == "_LayoutAdmin"
+            ? "/Views/Shared/_LayoutAdmin.cshtml"
+            : "/Views/Shared/_LayoutStaff.cshtml";
+    }
 }
 
 <div class="d-flex justify-content-between align-items-center mb-3">
     <h2>Motorcycle Management</h2>
-    <button class="btn btn-primary" data-bs-toggle="modal" data-bs-target="#createModal">
-        + Add Motorcycle
-    </button>
+    @if (User.IsInRole("Admin"))
+    {
+        <button class="btn btn-primary" data-bs-toggle="modal" data-bs-target="#createModal">
+            + Add Motorcycle
+        </button>
+    }
 </div>
 
 @if (TempData["Success"] != null)
@@ -119,12 +129,15 @@
                                 data-registrationno="@item.RegistrationNo">
                             Edit
                         </button>
-                        <button class="btn btn-sm btn-outline-danger btn-delete"
-                                data-bs-toggle="modal" data-bs-target="#deleteModal"
-                                data-id="@item.Id"
-                                data-plate="@item.LicensePlate">
-                            Delete
-                        </button>
+                        @if (User.IsInRole("Admin"))
+                        {
+                            <button class="btn btn-sm btn-outline-danger btn-delete"
+                                    data-bs-toggle="modal" data-bs-target="#deleteModal"
+                                    data-id="@item.Id"
+                                    data-plate="@item.LicensePlate">
+                                Delete
+                            </button>
+                        }
                     </td>
                 </tr>
             }
@@ -139,7 +152,7 @@
         <ul class="pagination justify-content-center">
             <li class="page-item @(Model.Result.HasPreviousPage ? "" : "disabled")">
                 <a class="page-link" asp-page="./Index"
-                   asp-route-page="@(Model.Page - 1)"
+                   asp-route-page="@(Model.PageNumber - 1)"
                    asp-route-search="@Model.Search"
                    asp-route-status="@Model.Status"
                    asp-route-minPrice="@Model.MinPrice"
@@ -147,7 +160,7 @@
             </li>
             @for (int i = 1; i <= Model.Result.TotalPages; i++)
             {
-                <li class="page-item @(i == Model.Page ? "active" : "")">
+                <li class="page-item @(i == Model.PageNumber ? "active" : "")">
                     <a class="page-link" asp-page="./Index"
                        asp-route-page="@i"
                        asp-route-search="@Model.Search"
@@ -158,7 +171,7 @@
             }
             <li class="page-item @(Model.Result.HasNextPage ? "" : "disabled")">
                 <a class="page-link" asp-page="./Index"
-                   asp-route-page="@(Model.Page + 1)"
+                   asp-route-page="@(Model.PageNumber + 1)"
                    asp-route-search="@Model.Search"
                    asp-route-status="@Model.Status"
                    asp-route-minPrice="@Model.MinPrice"

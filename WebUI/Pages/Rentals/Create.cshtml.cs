@@ -1,11 +1,14 @@
 using System.ComponentModel.DataAnnotations;
 using System.Net.Http.Json;
 using System.Text.Json;
+using System.Text.Json.Serialization;
+using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.AspNetCore.Mvc.RazorPages;
 
 namespace WebUI.Pages.Rentals;
 
+[Authorize(Roles = "Admin")]
 public class CreateModel : PageModel
 {
     private readonly IHttpClientFactory _httpClientFactory;
@@ -24,21 +27,24 @@ public class CreateModel : PageModel
     public async Task<IActionResult> OnGetAsync()
     {
         var client = _httpClientFactory.CreateClient("GobikeApi");
+        var jsonOptions = new JsonSerializerOptions
+        {
+            PropertyNameCaseInsensitive = true,
+            Converters = { new JsonStringEnumConverter() }
+        };
 
-        var motoRes = await client.GetAsync("/api/motorcycle/available");
+        var motoRes = await client.GetAsync("/api/motorcycles/available");
         if (motoRes.IsSuccessStatusCode)
         {
             var json = await motoRes.Content.ReadAsStringAsync();
-            AvailableMotorcycles = JsonSerializer.Deserialize<List<AvailableMotorcycle>>(json,
-                new JsonSerializerOptions { PropertyNameCaseInsensitive = true }) ?? new();
+            AvailableMotorcycles = JsonSerializer.Deserialize<List<AvailableMotorcycle>>(json, jsonOptions) ?? new();
         }
 
         var custRes = await client.GetAsync("/api/customer");
         if (custRes.IsSuccessStatusCode)
         {
             var json = await custRes.Content.ReadAsStringAsync();
-            Customers = JsonSerializer.Deserialize<List<CustomerOption>>(json,
-                new JsonSerializerOptions { PropertyNameCaseInsensitive = true }) ?? new();
+            Customers = JsonSerializer.Deserialize<List<CustomerOption>>(json, jsonOptions) ?? new();
         }
 
         return Page();

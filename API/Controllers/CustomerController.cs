@@ -1,11 +1,13 @@
 using BusinessObjects.Entities;
 using BusinessObjects.Enums;
+using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
 using Services.DTOs;
 using Services.Interfaces;
 
 namespace API.Controllers;
 
+[Authorize(Roles = "Admin,Staff")]
 [ApiController]
 [Route("api/[controller]")]
 public class CustomerController : ControllerBase
@@ -46,6 +48,7 @@ public class CustomerController : ControllerBase
         return customer is null ? NotFound() : Ok(customer);
     }
 
+    [Authorize(Roles = "Admin")]
     [HttpPost]
     public async Task<ActionResult> Create([FromBody] CustomerCreateDto dto)
     {
@@ -101,6 +104,7 @@ public class CustomerController : ControllerBase
         return NoContent();
     }
 
+    [Authorize(Roles = "Admin")]
     [HttpDelete("{id}")]
     public async Task<ActionResult> Delete(int id)
     {

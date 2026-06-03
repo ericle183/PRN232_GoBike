@@ -1,37 +1,33 @@
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.AspNetCore.Mvc.RazorPages;
 using Services.DTOs;
-using System.Text.Json;
+using WebUI.Services;
 
 namespace WebUI.Pages.Motorcycle;
 
 public class DetailsModel : PageModel
 {
-    private readonly IHttpClientFactory _httpClientFactory;
-    private static readonly JsonSerializerOptions JsonOptions = new() { PropertyNameCaseInsensitive = true };
+    private readonly IGoBikeApiClient _apiClient;
 
-    public DetailsModel(IHttpClientFactory httpClientFactory)
+    public DetailsModel(IGoBikeApiClient apiClient)
     {
-        _httpClientFactory = httpClientFactory;
+        _apiClient = apiClient;
     }
 
     public MotorcycleDetailDto Motorcycle { get; set; } = null!;
 
     public async Task<IActionResult> OnGetAsync(int id)
     {
-        var client = _httpClientFactory.CreateClient("API");
-        var response = await client.GetAsync($"api/motorcycles/{id}");
+        var (success, motorcycle, error) = await _apiClient.GetMotorcycleAsync(id);
 
-        if (!response.IsSuccessStatusCode)
+        if (!success || motorcycle == null)
+        {
+            if (!string.IsNullOrEmpty(error))
+                TempData["Error"] = error;
             return RedirectToPage("./Index");
+        }
 
-        var json = await response.Content.ReadAsStringAsync();
-        var result = JsonSerializer.Deserialize<MotorcycleDetailDto>(json, JsonOptions);
-
-        if (result == null)
-            return RedirectToPage("./Index");
-
-        Motorcycle = result;
+        Motorcycle = motorcycle;
         return Page();
     }
 }

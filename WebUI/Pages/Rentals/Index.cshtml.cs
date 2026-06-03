@@ -1,6 +1,8 @@
 using System.Text.Json;
+using System.Text.Json.Serialization;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.AspNetCore.Mvc.RazorPages;
+using Services.DTOs;
 
 namespace WebUI.Pages.Rentals;
 
@@ -35,21 +37,33 @@ public class IndexModel : PageModel
     public async Task<IActionResult> OnGetAsync()
     {
         var client = _httpClientFactory.CreateClient("GobikeApi");
+        var jsonOptions = new JsonSerializerOptions
+        {
+            PropertyNameCaseInsensitive = true,
+            Converters = { new JsonStringEnumConverter() }
+        };
 
         var custRes = await client.GetAsync("/api/customer");
         if (custRes.IsSuccessStatusCode)
         {
             var custJson = await custRes.Content.ReadAsStringAsync();
-            Customers = JsonSerializer.Deserialize<List<CustomerOption>>(custJson,
-                new JsonSerializerOptions { PropertyNameCaseInsensitive = true }) ?? new();
+            Customers = JsonSerializer.Deserialize<List<CustomerOption>>(custJson, jsonOptions) ?? new();
         }
 
-        var motoRes = await client.GetAsync("/api/motorcycle");
+        var motoRes = await client.GetAsync("/api/motorcycles?page=1&pageSize=100");
         if (motoRes.IsSuccessStatusCode)
         {
             var motoJson = await motoRes.Content.ReadAsStringAsync();
-            Motorcycles = JsonSerializer.Deserialize<List<MotorcycleOption>>(motoJson,
-                new JsonSerializerOptions { PropertyNameCaseInsensitive = true }) ?? new();
+            var page = JsonSerializer.Deserialize<PaginatedResult<MotorcycleDto>>(motoJson, jsonOptions);
+            Motorcycles = page?.Items.Select(m => new MotorcycleOption
+            {
+                Id = m.Id,
+                LicensePlate = m.LicensePlate,
+                Brand = m.Brand,
+                Model = m.Model,
+                DailyRate = m.DailyRate,
+                Mileage = m.Mileage
+            }).ToList() ?? new();
         }
 
         var queryParams = new List<string>();
@@ -65,8 +79,7 @@ public class IndexModel : PageModel
         if (rentalRes.IsSuccessStatusCode)
         {
             var rentalJson = await rentalRes.Content.ReadAsStringAsync();
-            Rentals = JsonSerializer.Deserialize<List<RentalListItem>>(rentalJson,
-                new JsonSerializerOptions { PropertyNameCaseInsensitive = true }) ?? new();
+            Rentals = JsonSerializer.Deserialize<List<RentalListItem>>(rentalJson, jsonOptions) ?? new();
         }
 
         return Page();

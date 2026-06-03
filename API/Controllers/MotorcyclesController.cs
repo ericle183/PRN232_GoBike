@@ -1,10 +1,12 @@
-using BusinessObjects.Enums;
+﻿using BusinessObjects.Enums;
+using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
 using Services.DTOs;
 using Services.Interfaces;
 
 namespace API.Controllers;
 
+[Authorize(Roles = "Admin,Staff")]
 [ApiController]
 [Route("api/[controller]")]
 public class MotorcyclesController : ControllerBase
@@ -46,6 +48,7 @@ public class MotorcyclesController : ControllerBase
         return Ok(motorcycles);
     }
 
+    [Authorize(Roles = "Admin")]
     [HttpPost]
     public async Task<IActionResult> Create([FromBody] CreateMotorcycleRequest request)
     {
@@ -89,6 +92,7 @@ public class MotorcyclesController : ControllerBase
         }
     }
 
+    [Authorize(Roles = "Admin")]
     [HttpDelete("{id}")]
     public async Task<IActionResult> Delete(int id)
     {
@@ -107,6 +111,7 @@ public class MotorcyclesController : ControllerBase
         }
     }
 
+    [Authorize(Roles = "Admin")]
     [HttpPatch("{id}/status")]
     public async Task<IActionResult> UpdateStatus(int id, [FromBody] UpdateStatusRequest request)
     {

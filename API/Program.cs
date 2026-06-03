@@ -51,13 +51,6 @@ builder.Services.AddAuthorization(options =>
     options.AddPolicy("AdminOrStaff", policy => policy.RequireRole("Admin", "Staff"));
 });
 
-builder.Services.AddControllers()
-    .AddJsonOptions(options =>
-    {
-        options.JsonSerializerOptions.Converters.Add(
-            new System.Text.Json.Serialization.JsonStringEnumConverter());
-    });
-
 IEdmModel GetEdmModel()
 {
     var odataBuilder = new ODataConventionModelBuilder();
@@ -66,6 +59,11 @@ IEdmModel GetEdmModel()
 }
 
 builder.Services.AddControllers()
+    .AddJsonOptions(options =>
+    {
+        options.JsonSerializerOptions.Converters.Add(
+            new System.Text.Json.Serialization.JsonStringEnumConverter());
+    })
     .AddOData(options => options
         .Select()
         .Filter()

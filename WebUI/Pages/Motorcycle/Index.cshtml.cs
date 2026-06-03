@@ -2,135 +2,75 @@ using BusinessObjects.Enums;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.AspNetCore.Mvc.RazorPages;
 using Services.DTOs;
-using System.Text.Json;
+using WebUI.Services;
 
 namespace WebUI.Pages.Motorcycle;
 
 public class IndexModel : PageModel
 {
-    private readonly IHttpClientFactory _httpClientFactory;
-    private static readonly JsonSerializerOptions JsonOptions = new() { PropertyNameCaseInsensitive = true };
+    private readonly IGoBikeApiClient _apiClient;
 
-    public IndexModel(IHttpClientFactory httpClientFactory)
+    public IndexModel(IGoBikeApiClient apiClient)
     {
-        _httpClientFactory = httpClientFactory;
+        _apiClient = apiClient;
     }
 
     public PaginatedResult<MotorcycleDto> Result { get; set; } = new();
-    public List<MotorcycleTypeItem> VehicleTypes { get; set; } = [];
+    public List<MotorcycleTypeDto> VehicleTypes { get; set; } = [];
 
     [BindProperty(SupportsGet = true)] public string? Search { get; set; }
     [BindProperty(SupportsGet = true)] public MotorcycleStatus? Status { get; set; }
     [BindProperty(SupportsGet = true)] public decimal? MinPrice { get; set; }
     [BindProperty(SupportsGet = true)] public decimal? MaxPrice { get; set; }
-    [BindProperty(SupportsGet = true)] public int Page { get; set; } = 1;
+    [BindProperty(SupportsGet = true, Name = "page")] public int PageNumber { get; set; } = 1;
 
     public async Task OnGetAsync()
     {
-        var client = _httpClientFactory.CreateClient("API");
+        var (success, result, error) = await _apiClient.GetMotorcyclesAsync(
+            Search, Status, MinPrice, MaxPrice, PageNumber);
 
-        var query = $"api/motorcycles?page={Page}&pageSize=10";
-        if (!string.IsNullOrWhiteSpace(Search)) query += $"&search={Uri.EscapeDataString(Search)}";
-        if (Status.HasValue) query += $"&status={Status}";
-        if (MinPrice.HasValue) query += $"&minPrice={MinPrice}";
-        if (MaxPrice.HasValue) query += $"&maxPrice={MaxPrice}";
+        if (success && result != null)
+            Result = result;
+        else if (!string.IsNullOrEmpty(error))
+            TempData["Error"] = error;
 
-        var response = await client.GetAsync(query);
-        if (response.IsSuccessStatusCode)
-        {
-            var json = await response.Content.ReadAsStringAsync();
-            Result = JsonSerializer.Deserialize<PaginatedResult<MotorcycleDto>>(json, JsonOptions)
-                     ?? new PaginatedResult<MotorcycleDto>();
-        }
-
-        await LoadVehicleTypes(client);
+        var (typesSuccess, types, typesError) = await _apiClient.GetMotorcycleTypesAsync();
+        if (typesSuccess && types != null)
+            VehicleTypes = types;
+        else if (!string.IsNullOrEmpty(typesError) && TempData["Error"] == null)
+            TempData["Error"] = typesError;
     }
 
     public async Task<IActionResult> OnPostCreateAsync([FromForm] CreateMotorcycleRequest request)
     {
-        var client = _httpClientFactory.CreateClient("API");
-        var response = await client.PostAsJsonAsync("api/motorcycles", request);
+        if (!User.IsInRole("Admin"))
+            return Forbid();
 
-        if (response.IsSuccessStatusCode)
-        {
-            TempData["Success"] = "Motorcycle created successfully!";
-        }
-        else
-        {
-            var error = await response.Content.ReadAsStringAsync();
-            TempData["Error"] = TryExtractMessage(error);
-        }
-
+        var (success, _, error) = await _apiClient.CreateMotorcycleAsync(request);
+        TempData[success ? "Success" : "Error"] = success
+            ? "Motorcycle created successfully!"
+            : error ?? "Failed to create motorcycle.";
         return RedirectToPage();
     }
 
     public async Task<IActionResult> OnPostEditAsync(int id, [FromForm] UpdateMotorcycleRequest request)
     {
-        var client = _httpClientFactory.CreateClient("API");
-        var response = await client.PutAsJsonAsync($"api/motorcycles/{id}", request);
-
-        if (response.IsSuccessStatusCode)
-        {
-            TempData["Success"] = "Motorcycle updated successfully!";
-        }
-        else
-        {
-            var error = await response.Content.ReadAsStringAsync();
-            TempData["Error"] = TryExtractMessage(error);
-        }
-
+        var (success, _, error) = await _apiClient.UpdateMotorcycleAsync(id, request);
+        TempData[success ? "Success" : "Error"] = success
+            ? "Motorcycle updated successfully!"
+            : error ?? "Failed to update motorcycle.";
         return RedirectToPage();
     }
 
     public async Task<IActionResult> OnPostDeleteAsync(int id)
     {
-        var client = _httpClientFactory.CreateClient("API");
-        var response = await client.DeleteAsync($"api/motorcycles/{id}");
+        if (!User.IsInRole("Admin"))
+            return Forbid();
 
-        if (response.IsSuccessStatusCode)
-        {
-            TempData["Success"] = "Motorcycle deleted successfully!";
-        }
-        else
-        {
-            var error = await response.Content.ReadAsStringAsync();
-            TempData["Error"] = TryExtractMessage(error);
-        }
-
+        var (success, error) = await _apiClient.DeleteMotorcycleAsync(id);
+        TempData[success ? "Success" : "Error"] = success
+            ? "Motorcycle deleted successfully!"
+            : error ?? "Failed to delete motorcycle.";
         return RedirectToPage();
     }
-
-    private async Task LoadVehicleTypes(HttpClient client)
-    {
-        try
-        {
-            var response = await client.GetAsync("api/motorcycletypes");
-            if (response.IsSuccessStatusCode)
-            {
-                var json = await response.Content.ReadAsStringAsync();
-                VehicleTypes = JsonSerializer.Deserialize<List<MotorcycleTypeItem>>(json, JsonOptions) ?? [];
-            }
-        }
-        catch { }
-    }
-
-    private static string TryExtractMessage(string json)
-    {
-        try
-        {
-            using var doc = JsonDocument.Parse(json);
-            return doc.RootElement.GetProperty("message").GetString() ?? "An error occurred.";
-        }
-        catch
-        {
-            return "An error occurred.";
-        }
-    }
-}
-
-public class MotorcycleTypeItem
-{
-    public int Id { get; set; }
-    public string Name { get; set; } = string.Empty;
-    public decimal DefaultDailyRate { get; set; }
 }

@@ -1,9 +1,11 @@
 using System.Text.Json;
+using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.AspNetCore.Mvc.RazorPages;
 
 namespace WebUI.Pages.Rentals;
 
+[Authorize(Roles = "Admin")]
 public class ActivateModel : PageModel
 {
     private readonly IHttpClientFactory _httpClientFactory;

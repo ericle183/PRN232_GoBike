@@ -1,8 +1,15 @@
 @page "{id:int}"
 @model WebUI.Pages.Motorcycle.DetailsModel
 @using BusinessObjects.Enums
+@using WebUI.Helpers
 @{
     ViewData["Title"] = $"Motorcycle — {Model.Motorcycle.LicensePlate}";
+    if (User.Identity?.IsAuthenticated == true)
+    {
+        Layout = AuthorizationHelper.GetLayoutPath(User) == "_LayoutAdmin"
+            ? "/Views/Shared/_LayoutAdmin.cshtml"
+            : "/Views/Shared/_LayoutStaff.cshtml";
+    }
 
     var badgeClass = Model.Motorcycle.Status switch
     {
