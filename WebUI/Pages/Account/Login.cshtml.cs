@@ -1,21 +1,22 @@
 using System.Security.Claims;
 using BusinessObjects.DTOs;
+using BusinessObjects.Enums;
 using Microsoft.AspNetCore.Authentication;
 using Microsoft.AspNetCore.Authentication.Cookies;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.AspNetCore.Mvc.RazorPages;
-using Services.Interfaces;
+using WebUI.Services;
 
 namespace WebUI.Pages.Account;
 
 public class LoginModel : PageModel
 {
-    private readonly IUserService userService;
+    private readonly IGoBikeApiClient apiClient;
     private readonly ILogger<LoginModel> logger;
 
-    public LoginModel(IUserService userService, ILogger<LoginModel> logger)
+    public LoginModel(IGoBikeApiClient apiClient, ILogger<LoginModel> logger)
     {
-        this.userService = userService;
+        this.apiClient = apiClient;
         this.logger = logger;
     }
 
@@ -23,6 +24,14 @@ public class LoginModel : PageModel
     public LoginRequest Input { get; set; } = new();
 
     public string? ErrorMessage { get; set; }
+
+    public IActionResult OnGet()
+    {
+        if (User.Identity?.IsAuthenticated == true)
+            return RedirectToRoleHome();
+
+        return Page();
+    }
 
     public async Task<IActionResult> OnPostAsync(string? returnUrl = null)
     {
@@ -32,44 +41,46 @@ public class LoginModel : PageModel
             return Page();
         }
 
-        var user = await userService.GetByUsernameAsync(Input.Username);
-        if (user == null || !BCrypt.Net.BCrypt.Verify(Input.Password, user.PasswordHash))
+        var (success, user, error) = await apiClient.LoginAsync(Input);
+        if (!success || user == null)
         {
-            ErrorMessage = "Invalid username or password";
-            logger.LogWarning($"Failed login attempt for username: {Input.Username}");
+            ErrorMessage = error ?? "Invalid username or password";
+            logger.LogWarning("Failed login attempt for username: {Username}", Input.Username);
             return Page();
         }
 
-        if (!user.IsActive)
-        {
-            ErrorMessage = "User account is inactive";
-            return Page();
-        }
-
-        // Create claims for the user
         var claims = new List<Claim>
         {
-            new Claim(ClaimTypes.NameIdentifier, user.Id.ToString()),
-            new Claim(ClaimTypes.Name, user.Username),
-            new Claim(ClaimTypes.Email, user.Email ?? ""),
-            new Claim(ClaimTypes.GivenName, user.FullName),
-            new Claim(ClaimTypes.Role, user.Role.ToString())
-        };
-
-        var claimsIdentity = new ClaimsIdentity(claims, CookieAuthenticationDefaults.AuthenticationScheme);
-        var authProperties = new AuthenticationProperties
-        {
-            IsPersistent = true,
-            ExpiresUtc = DateTimeOffset.UtcNow.AddDays(7)
+            new(ClaimTypes.NameIdentifier, user.Id.ToString()),
+            new(ClaimTypes.Name, user.Username),
+            new(ClaimTypes.Email, user.Email ?? ""),
+            new(ClaimTypes.GivenName, user.FullName),
+            new(ClaimTypes.Role, user.Role.ToString())
         };
 
         await HttpContext.SignInAsync(
             CookieAuthenticationDefaults.AuthenticationScheme,
-            new ClaimsPrincipal(claimsIdentity),
-            authProperties);
+            new ClaimsPrincipal(new ClaimsIdentity(claims, CookieAuthenticationDefaults.AuthenticationScheme)),
+            new AuthenticationProperties
+            {
+                IsPersistent = true,
+                ExpiresUtc = DateTimeOffset.UtcNow.AddDays(7)
+            });
 
-        logger.LogInformation($"User {user.Username} logged in successfully");
+        logger.LogInformation("User {Username} logged in via API", user.Username);
 
-        return LocalRedirect(returnUrl ?? "/");
+        if (!string.IsNullOrEmpty(returnUrl) && Url.IsLocalUrl(returnUrl))
+            return LocalRedirect(returnUrl);
+
+        return user.Role == UserRole.Admin
+            ? RedirectToPage("/Admin/Staff/Index")
+            : RedirectToPage("/Index");
+    }
+
+    private IActionResult RedirectToRoleHome()
+    {
+        return User.IsInRole(UserRole.Admin.ToString())
+            ? RedirectToPage("/Admin/Staff/Index")
+            : RedirectToPage("/Index");
     }
 }

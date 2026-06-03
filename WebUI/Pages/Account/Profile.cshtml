@@ -1,7 +1,11 @@
 @page
+@using WebUI.Helpers
 @model WebUI.Pages.Account.ProfileModel
 @{
     ViewData["Title"] = "User Profile";
+    Layout = AuthorizationHelper.GetLayoutPath(User) == "_LayoutAdmin"
+        ? "/Views/Shared/_LayoutAdmin.cshtml"
+        : "/Views/Shared/_LayoutStaff.cshtml";
 }
 
 <div class="container mt-5">
@@ -52,17 +56,17 @@
                                         <tr>
                                             <td class="fw-bold">Role:</td>
                                             <td>
-                                                @if (Model.UserProfile.Role == "Admin")
+                                                @if (Model.UserProfile.RoleName == "Admin")
                                                 {
-                                                    <span class="badge bg-danger">@Model.UserProfile.Role</span>
+                                                    <span class="badge bg-danger">@Model.UserProfile.RoleName</span>
                                                 }
-                                                else if (Model.UserProfile.Role == "Staff")
+                                                else if (Model.UserProfile.RoleName == "Staff")
                                                 {
-                                                    <span class="badge bg-info">@Model.UserProfile.Role</span>
+                                                    <span class="badge bg-info">@Model.UserProfile.RoleName</span>
                                                 }
                                                 else
                                                 {
-                                                    <span class="badge bg-secondary">@Model.UserProfile.Role</span>
+                                                    <span class="badge bg-secondary">@Model.UserProfile.RoleName</span>
                                                 }
                                             </td>
                                         </tr>
@@ -99,11 +103,11 @@
                                     </li>
                                     <li class="mb-2">
                                         <strong>Account Type:</strong> 
-                                        @if (Model.UserProfile.Role == "Admin")
+                                        @if (Model.UserProfile.RoleName == "Admin")
                                         {
                                             <span>Administrator - Full system access</span>
                                         }
-                                        else if (Model.UserProfile.Role == "Staff")
+                                        else if (Model.UserProfile.RoleName == "Staff")
                                         {
                                             <span>Staff Member - Limited access</span>
                                         }

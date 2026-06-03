@@ -11,7 +11,7 @@ var builder = WebApplication.CreateBuilder(args);
 var connectionString = builder.Configuration.GetConnectionString("DefaultConnection");
 if (string.IsNullOrWhiteSpace(connectionString))
 {
-    throw new InvalidOperationException("Connection string 'DefaultConnection' was not found. Please configure user secrets or appsettings.");
+    throw new InvalidOperationException("Connection string 'DefaultConnection' was not found.");
 }
 
 builder.Services.AddDbContext<AppDbContext>(options =>
@@ -29,7 +29,6 @@ builder.Services.AddScoped<IMotorcycleService, MotorcycleService>();
 builder.Services.AddScoped<ICustomerService, CustomerService>();
 builder.Services.AddScoped<IRentalContractService, RentalContractService>();
 
-// Add Cookie Authentication
 builder.Services.AddAuthentication(CookieAuthenticationDefaults.AuthenticationScheme)
     .AddCookie(options =>
     {
@@ -40,7 +39,6 @@ builder.Services.AddAuthentication(CookieAuthenticationDefaults.AuthenticationSc
         options.SlidingExpiration = true;
     });
 
-// Add Authorization policies
 builder.Services.AddAuthorization(options =>
 {
     options.AddPolicy("AdminOnly", policy => policy.RequireRole("Admin"));
@@ -48,7 +46,13 @@ builder.Services.AddAuthorization(options =>
     options.AddPolicy("AdminOrStaff", policy => policy.RequireRole("Admin", "Staff"));
 });
 
-builder.Services.AddControllers();
+builder.Services.AddControllers()
+    .AddJsonOptions(options =>
+    {
+        options.JsonSerializerOptions.Converters.Add(
+            new System.Text.Json.Serialization.JsonStringEnumConverter());
+    });
+
 builder.Services.AddEndpointsApiExplorer();
 builder.Services.AddOpenApi();
 

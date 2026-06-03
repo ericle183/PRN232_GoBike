@@ -1,5 +1,6 @@
 ﻿using System.Security.Claims;
 using BusinessObjects.DTOs;
+using BusinessObjects.Entities;
 using Microsoft.AspNetCore.Authentication;
 using Microsoft.AspNetCore.Authentication.Cookies;
 using Microsoft.AspNetCore.Authorization;
@@ -19,6 +20,7 @@ public class AuthController : ControllerBase
         this.userService = userService;
     }
 
+    [AllowAnonymous]
     [HttpPost("login")]
     public async Task<IActionResult> Login([FromBody] LoginRequest request)
     {
@@ -32,38 +34,29 @@ public class AuthController : ControllerBase
         if (!user.IsActive)
             return Unauthorized(new { message = "User account is inactive" });
 
-        // Create claims for the user
         var claims = new List<Claim>
         {
-            new Claim(ClaimTypes.NameIdentifier, user.Id.ToString()),
-            new Claim(ClaimTypes.Name, user.Username),
-            new Claim(ClaimTypes.Email, user.Email ?? ""),
-            new Claim(ClaimTypes.GivenName, user.FullName),
-            new Claim(ClaimTypes.Role, user.Role.ToString())
-        };
-
-        var claimsIdentity = new ClaimsIdentity(claims, CookieAuthenticationDefaults.AuthenticationScheme);
-        var authProperties = new AuthenticationProperties
-        {
-            IsPersistent = true,
-            ExpiresUtc = DateTimeOffset.UtcNow.AddDays(7)
+            new(ClaimTypes.NameIdentifier, user.Id.ToString()),
+            new(ClaimTypes.Name, user.Username),
+            new(ClaimTypes.Email, user.Email ?? string.Empty),
+            new(ClaimTypes.GivenName, user.FullName),
+            new(ClaimTypes.Role, user.Role.ToString())
         };
 
         await HttpContext.SignInAsync(
             CookieAuthenticationDefaults.AuthenticationScheme,
-            new ClaimsPrincipal(claimsIdentity),
-            authProperties);
+            new ClaimsPrincipal(new ClaimsIdentity(claims, CookieAuthenticationDefaults.AuthenticationScheme)),
+            new AuthenticationProperties
+            {
+                IsPersistent = true,
+                ExpiresUtc = DateTimeOffset.UtcNow.AddDays(7)
+            });
 
-        var response = new LoginResponse
+        return Ok(new ApiLoginResult
         {
-            Id = user.Id,
-            Username = user.Username,
-            FullName = user.FullName,
-            Email = user.Email ?? "",
-            Role = user.Role
-        };
-
-        return Ok(new { message = "Login successful", user = response });
+            Message = "Login successful",
+            User = MapLoginResponse(user)
+        });
     }
 
     [Authorize]
@@ -78,30 +71,39 @@ public class AuthController : ControllerBase
     [HttpGet("access-denied")]
     public IActionResult AccessDenied()
     {
-        return Forbid("Access denied");
+        return StatusCode(StatusCodes.Status403Forbidden, new { message = "Access denied" });
     }
 
     [Authorize]
     [HttpGet("profile")]
     public async Task<IActionResult> GetProfile()
     {
-        var userIdClaim = User.FindFirst(ClaimTypes.NameIdentifier)?.Value;
-        if (!int.TryParse(userIdClaim, out var userId))
+        var username = User.FindFirst(ClaimTypes.Name)?.Value;
+        if (string.IsNullOrEmpty(username))
             return Unauthorized();
 
-        var user = await userService.GetByUsernameAsync(User.FindFirst(ClaimTypes.Name)?.Value ?? "");
+        var user = await userService.GetByUsernameAsync(username);
         if (user == null)
-            return NotFound();
+            return NotFound(new { message = "User not found" });
 
-        var response = new LoginResponse
+        return Ok(new UserProfileDto
         {
             Id = user.Id,
             Username = user.Username,
             FullName = user.FullName,
-            Email = user.Email ?? "",
-            Role = user.Role
-        };
-
-        return Ok(response);
+            Email = user.Email,
+            Role = user.Role,
+            IsActive = user.IsActive,
+            CreatedAt = user.CreatedAt
+        });
     }
+
+    private static LoginResponse MapLoginResponse(User user) => new()
+    {
+        Id = user.Id,
+        Username = user.Username,
+        FullName = user.FullName,
+        Email = user.Email ?? string.Empty,
+        Role = user.Role
+    };
 }
