@@ -49,6 +49,11 @@ builder.Services.AddHttpClient("GobikeApi", client =>
     client.DefaultRequestHeaders.Add("Accept", "application/json");
 });
 
+builder.Services.AddHttpClient("API", client =>
+{
+    client.BaseAddress = new Uri("http://localhost:5210");
+});
+
 var app = builder.Build();
 
 if (!app.Environment.IsDevelopment())
