@@ -84,7 +84,7 @@ public static class DBSeeder
         {
             new()
             {
-                Id = 1, CustomerId = 1, MotorcycleId = 1,
+                CustomerId = 1, MotorcycleId = 1,
                 RentalDate = new DateTime(2026, 5, 25, 8, 0, 0, DateTimeKind.Utc),
                 ExpectedReturnDate = new DateTime(2026, 5, 28, 20, 0, 0, DateTimeKind.Utc),
                 ActualReturnDate = new DateTime(2026, 5, 28, 18, 0, 0, DateTimeKind.Utc),
@@ -96,7 +96,7 @@ public static class DBSeeder
             },
             new()
             {
-                Id = 2, CustomerId = 3, MotorcycleId = 3,
+                CustomerId = 3, MotorcycleId = 3,
                 RentalDate = new DateTime(2026, 6, 1, 9, 0, 0, DateTimeKind.Utc),
                 ExpectedReturnDate = new DateTime(2026, 6, 5, 20, 0, 0, DateTimeKind.Utc),
                 DailyRate = 110_000m, TotalAmount = 440_000m, DepositAmount = 300_000m, FinalAmount = 0,
@@ -107,7 +107,7 @@ public static class DBSeeder
             },
             new()
             {
-                Id = 3, CustomerId = 5, MotorcycleId = 8,
+                CustomerId = 5, MotorcycleId = 8,
                 RentalDate = new DateTime(2026, 6, 3, 8, 0, 0, DateTimeKind.Utc),
                 ExpectedReturnDate = new DateTime(2026, 6, 6, 20, 0, 0, DateTimeKind.Utc),
                 DailyRate = 180_000m, TotalAmount = 540_000m, DepositAmount = 400_000m, FinalAmount = 0,
@@ -117,7 +117,7 @@ public static class DBSeeder
             },
             new()
             {
-                Id = 4, CustomerId = 7, MotorcycleId = 2,
+                CustomerId = 7, MotorcycleId = 2,
                 RentalDate = new DateTime(2026, 5, 20, 8, 0, 0, DateTimeKind.Utc),
                 ExpectedReturnDate = new DateTime(2026, 5, 22, 20, 0, 0, DateTimeKind.Utc),
                 ActualReturnDate = new DateTime(2026, 5, 24, 14, 0, 0, DateTimeKind.Utc),
@@ -129,7 +129,7 @@ public static class DBSeeder
             },
             new()
             {
-                Id = 5, CustomerId = 9, MotorcycleId = 5,
+                CustomerId = 9, MotorcycleId = 5,
                 RentalDate = new DateTime(2026, 5, 28, 8, 0, 0, DateTimeKind.Utc),
                 ExpectedReturnDate = new DateTime(2026, 5, 30, 20, 0, 0, DateTimeKind.Utc),
                 DailyRate = 150_000m, TotalAmount = 300_000m, DepositAmount = 200_000m, FinalAmount = 0,
