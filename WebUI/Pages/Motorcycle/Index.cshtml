@@ -1,0 +1,340 @@
+@page
+@model WebUI.Pages.Motorcycle.IndexModel
+@using BusinessObjects.Enums
+@{
+    ViewData["Title"] = "Motorcycle Management";
+}
+
+<div class="d-flex justify-content-between align-items-center mb-3">
+    <h2>Motorcycle Management</h2>
+    <button class="btn btn-primary" data-bs-toggle="modal" data-bs-target="#createModal">
+        + Add Motorcycle
+    </button>
+</div>
+
+@if (TempData["Success"] != null)
+{
+    <div class="alert alert-success alert-dismissible fade show">
+        @TempData["Success"]
+        <button type="button" class="btn-close" data-bs-dismiss="alert"></button>
+    </div>
+}
+@if (TempData["Error"] != null)
+{
+    <div class="alert alert-danger alert-dismissible fade show">
+        @TempData["Error"]
+        <button type="button" class="btn-close" data-bs-dismiss="alert"></button>
+    </div>
+}
+
+<!-- Search & Filter -->
+<form method="get" class="card card-body mb-3">
+    <div class="row g-2 align-items-end">
+        <div class="col-md-3">
+            <label class="form-label">Search</label>
+            <input type="text" name="Search" value="@Model.Search" class="form-control"
+                   placeholder="Plate, Brand, Model..." />
+        </div>
+        <div class="col-md-2">
+            <label class="form-label">Status</label>
+            <select name="Status" class="form-select">
+                <option value="">All</option>
+                @foreach (var s in Enum.GetValues<MotorcycleStatus>())
+                {
+                    <option value="@s" selected="@(Model.Status == s)">@s</option>
+                }
+            </select>
+        </div>
+        <div class="col-md-2">
+            <label class="form-label">Min Price</label>
+            <input type="number" name="MinPrice" value="@Model.MinPrice" class="form-control" placeholder="0" />
+        </div>
+        <div class="col-md-2">
+            <label class="form-label">Max Price</label>
+            <input type="number" name="MaxPrice" value="@Model.MaxPrice" class="form-control" placeholder="999999" />
+        </div>
+        <div class="col-md-3 d-flex gap-2">
+            <button type="submit" class="btn btn-outline-primary">Search</button>
+            <a asp-page="./Index" class="btn btn-outline-secondary">Clear</a>
+        </div>
+    </div>
+</form>
+
+<!-- Table -->
+<div class="table-responsive">
+    <table class="table table-hover">
+        <thead class="table-light">
+            <tr>
+                <th>#</th>
+                <th>License Plate</th>
+                <th>Brand</th>
+                <th>Model</th>
+                <th>Type</th>
+                <th>Status</th>
+                <th>Daily Rate</th>
+                <th>Color</th>
+                <th>Mileage</th>
+                <th>Actions</th>
+            </tr>
+        </thead>
+        <tbody>
+            @if (Model.Result.Items.Count == 0)
+            {
+                <tr><td colspan="10" class="text-center text-muted py-4">No motorcycles found.</td></tr>
+            }
+            @foreach (var item in Model.Result.Items)
+            {
+                var badgeClass = item.Status switch
+                {
+                    MotorcycleStatus.Available => "bg-success",
+                    MotorcycleStatus.Reserved => "bg-primary",
+                    MotorcycleStatus.Rented => "bg-warning text-dark",
+                    MotorcycleStatus.Maintenance => "bg-secondary",
+                    _ => "bg-light text-dark"
+                };
+
+                <tr>
+                    <td>@item.Id</td>
+                    <td><strong>@item.LicensePlate</strong></td>
+                    <td>@item.Brand</td>
+                    <td>@item.Model</td>
+                    <td>@item.VehicleTypeName</td>
+                    <td><span class="badge @badgeClass">@item.StatusText</span></td>
+                    <td>@item.DailyRate.ToString("#,##0") VND</td>
+                    <td>@item.Color</td>
+                    <td>@item.Mileage.ToString("#,##0") km</td>
+                    <td>
+                        <button class="btn btn-sm btn-outline-primary btn-edit"
+                                data-bs-toggle="modal" data-bs-target="#editModal"
+                                data-id="@item.Id"
+                                data-licenseplate="@item.LicensePlate"
+                                data-brand="@item.Brand"
+                                data-model="@item.Model"
+                                data-vehicletypeid="@item.VehicleTypeId"
+                                data-dailyrate="@item.DailyRate"
+                                data-color="@item.Color"
+                                data-mileage="@item.Mileage"
+                                data-registrationno="@item.RegistrationNo">
+                            Edit
+                        </button>
+                        <button class="btn btn-sm btn-outline-danger btn-delete"
+                                data-bs-toggle="modal" data-bs-target="#deleteModal"
+                                data-id="@item.Id"
+                                data-plate="@item.LicensePlate">
+                            Delete
+                        </button>
+                    </td>
+                </tr>
+            }
+        </tbody>
+    </table>
+</div>
+
+<!-- Pagination -->
+@if (Model.Result.TotalPages > 1)
+{
+    <nav>
+        <ul class="pagination justify-content-center">
+            <li class="page-item @(Model.Result.HasPreviousPage ? "" : "disabled")">
+                <a class="page-link" asp-page="./Index"
+                   asp-route-page="@(Model.Page - 1)"
+                   asp-route-search="@Model.Search"
+                   asp-route-status="@Model.Status"
+                   asp-route-minPrice="@Model.MinPrice"
+                   asp-route-maxPrice="@Model.MaxPrice">Previous</a>
+            </li>
+            @for (int i = 1; i <= Model.Result.TotalPages; i++)
+            {
+                <li class="page-item @(i == Model.Page ? "active" : "")">
+                    <a class="page-link" asp-page="./Index"
+                       asp-route-page="@i"
+                       asp-route-search="@Model.Search"
+                       asp-route-status="@Model.Status"
+                       asp-route-minPrice="@Model.MinPrice"
+                       asp-route-maxPrice="@Model.MaxPrice">@i</a>
+                </li>
+            }
+            <li class="page-item @(Model.Result.HasNextPage ? "" : "disabled")">
+                <a class="page-link" asp-page="./Index"
+                   asp-route-page="@(Model.Page + 1)"
+                   asp-route-search="@Model.Search"
+                   asp-route-status="@Model.Status"
+                   asp-route-minPrice="@Model.MinPrice"
+                   asp-route-maxPrice="@Model.MaxPrice">Next</a>
+            </li>
+        </ul>
+    </nav>
+}
+<p class="text-muted text-center">Showing @Model.Result.Items.Count of @Model.Result.TotalItems motorcycles</p>
+
+<!-- ===== CREATE MODAL ===== -->
+<div class="modal fade" id="createModal" tabindex="-1">
+    <div class="modal-dialog">
+        <form method="post" asp-page-handler="Create" class="modal-content">
+            <div class="modal-header">
+                <h5 class="modal-title">Add Motorcycle</h5>
+                <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
+            </div>
+            <div class="modal-body">
+                <div class="mb-3">
+                    <label class="form-label">License Plate <span class="text-danger">*</span></label>
+                    <input type="text" name="LicensePlate" class="form-control" required
+                           placeholder="e.g. 51A-12345" pattern="[0-9]{2}[A-Z]{1,2}-[0-9]{4,5}" />
+                </div>
+                <div class="row mb-3">
+                    <div class="col-6">
+                        <label class="form-label">Brand <span class="text-danger">*</span></label>
+                        <input type="text" name="Brand" class="form-control" required />
+                    </div>
+                    <div class="col-6">
+                        <label class="form-label">Model <span class="text-danger">*</span></label>
+                        <input type="text" name="Model" class="form-control" required />
+                    </div>
+                </div>
+                <div class="row mb-3">
+                    <div class="col-6">
+                        <label class="form-label">Vehicle Type <span class="text-danger">*</span></label>
+                        <select name="VehicleTypeId" class="form-select" required>
+                            <option value="">-- Select --</option>
+                            @foreach (var t in Model.VehicleTypes)
+                            {
+                                <option value="@t.Id">@t.Name</option>
+                            }
+                        </select>
+                    </div>
+                    <div class="col-6">
+                        <label class="form-label">Daily Rate (VND) <span class="text-danger">*</span></label>
+                        <input type="number" name="DailyRate" class="form-control" required min="1000" />
+                    </div>
+                </div>
+                <div class="row mb-3">
+                    <div class="col-6">
+                        <label class="form-label">Color <span class="text-danger">*</span></label>
+                        <input type="text" name="Color" class="form-control" required />
+                    </div>
+                    <div class="col-6">
+                        <label class="form-label">Mileage (km)</label>
+                        <input type="number" name="Mileage" class="form-control" value="0" min="0" />
+                    </div>
+                </div>
+                <div class="mb-3">
+                    <label class="form-label">Registration No</label>
+                    <input type="text" name="RegistrationNo" class="form-control" />
+                </div>
+            </div>
+            <div class="modal-footer">
+                <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Cancel</button>
+                <button type="submit" class="btn btn-primary">Create</button>
+            </div>
+        </form>
+    </div>
+</div>
+
+<!-- ===== EDIT MODAL ===== -->
+<div class="modal fade" id="editModal" tabindex="-1">
+    <div class="modal-dialog">
+        <form method="post" asp-page-handler="Edit" class="modal-content">
+            <input type="hidden" name="id" id="edit-id" />
+            <div class="modal-header">
+                <h5 class="modal-title">Edit Motorcycle</h5>
+                <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
+            </div>
+            <div class="modal-body">
+                <div class="mb-3">
+                    <label class="form-label">License Plate</label>
+                    <input type="text" name="LicensePlate" id="edit-licenseplate" class="form-control"
+                           pattern="[0-9]{2}[A-Z]{1,2}-[0-9]{4,5}" />
+                </div>
+                <div class="row mb-3">
+                    <div class="col-6">
+                        <label class="form-label">Brand</label>
+                        <input type="text" name="Brand" id="edit-brand" class="form-control" />
+                    </div>
+                    <div class="col-6">
+                        <label class="form-label">Model</label>
+                        <input type="text" name="Model" id="edit-model" class="form-control" />
+                    </div>
+                </div>
+                <div class="row mb-3">
+                    <div class="col-6">
+                        <label class="form-label">Vehicle Type</label>
+                        <select name="VehicleTypeId" id="edit-vehicletypeid" class="form-select">
+                            @foreach (var t in Model.VehicleTypes)
+                            {
+                                <option value="@t.Id">@t.Name</option>
+                            }
+                        </select>
+                    </div>
+                    <div class="col-6">
+                        <label class="form-label">Daily Rate (VND)</label>
+                        <input type="number" name="DailyRate" id="edit-dailyrate" class="form-control" min="1000" />
+                    </div>
+                </div>
+                <div class="row mb-3">
+                    <div class="col-6">
+                        <label class="form-label">Color</label>
+                        <input type="text" name="Color" id="edit-color" class="form-control" />
+                    </div>
+                    <div class="col-6">
+                        <label class="form-label">Mileage (km)</label>
+                        <input type="number" name="Mileage" id="edit-mileage" class="form-control" min="0" />
+                    </div>
+                </div>
+                <div class="mb-3">
+                    <label class="form-label">Registration No</label>
+                    <input type="text" name="RegistrationNo" id="edit-registrationno" class="form-control" />
+                </div>
+            </div>
+            <div class="modal-footer">
+                <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Cancel</button>
+                <button type="submit" class="btn btn-primary">Save Changes</button>
+            </div>
+        </form>
+    </div>
+</div>
+
+<!-- ===== DELETE MODAL ===== -->
+<div class="modal fade" id="deleteModal" tabindex="-1">
+    <div class="modal-dialog">
+        <form method="post" asp-page-handler="Delete" class="modal-content">
+            <input type="hidden" name="id" id="delete-id" />
+            <div class="modal-header">
+                <h5 class="modal-title text-danger">Confirm Delete</h5>
+                <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
+            </div>
+            <div class="modal-body">
+                <p>Are you sure you want to delete motorcycle <strong id="delete-plate"></strong>?</p>
+                <p class="text-muted">This action cannot be undone.</p>
+            </div>
+            <div class="modal-footer">
+                <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Cancel</button>
+                <button type="submit" class="btn btn-danger">Delete</button>
+            </div>
+        </form>
+    </div>
+</div>
+
+@section Scripts {
+<script>
+    document.querySelectorAll('.btn-edit').forEach(btn => {
+        btn.addEventListener('click', function () {
+            document.getElementById('edit-id').value = this.dataset.id;
+            document.getElementById('edit-licenseplate').value = this.dataset.licenseplate;
+            document.getElementById('edit-brand').value = this.dataset.brand;
+            document.getElementById('edit-model').value = this.dataset.model;
+            document.getElementById('edit-vehicletypeid').value = this.dataset.vehicletypeid;
+            document.getElementById('edit-dailyrate').value = this.dataset.dailyrate;
+            document.getElementById('edit-color').value = this.dataset.color;
+            document.getElementById('edit-mileage').value = this.dataset.mileage;
+            document.getElementById('edit-registrationno').value = this.dataset.registrationno || '';
+        });
+    });
+
+    document.querySelectorAll('.btn-delete').forEach(btn => {
+        btn.addEventListener('click', function () {
+            document.getElementById('delete-id').value = this.dataset.id;
+            document.getElementById('delete-plate').textContent = this.dataset.plate;
+        });
+    });
+</script>
+}
