@@ -1,10 +1,29 @@
 ﻿@page
+@using WebUI.Helpers
 @model IndexModel
 @{
-    ViewData["Title"] = "Home page";
+    ViewData["Title"] = "Trang chủ";
+    if (User.Identity?.IsAuthenticated == true)
+    {
+        Layout = AuthorizationHelper.GetLayoutPath(User) == "_LayoutAdmin"
+            ? "/Views/Shared/_LayoutAdmin.cshtml"
+            : "/Views/Shared/_LayoutStaff.cshtml";
+    }
 }
 
 <div class="text-center">
-    <h1 class="display-4">Welcome</h1>
-    <p>Learn about <a href="https://learn.microsoft.com/aspnet/core">building Web apps with ASP.NET Core</a>.</p>
+    <h1 class="display-4">Chào mừng đến GoBike</h1>
+    @if (User.Identity?.IsAuthenticated == true)
+    {
+        <p class="lead">Xin chào, <strong>@User.FindFirst(System.Security.Claims.ClaimTypes.GivenName)?.Value</strong>!</p>
+        @if (AuthorizationHelper.IsAdmin(User))
+        {
+            <a class="btn btn-primary" asp-page="/Admin/Staff/Index">Quản lý nhân viên</a>
+        }
+    }
+    else
+    {
+        <p class="text-muted">Vui lòng đăng nhập để sử dụng hệ thống.</p>
+        <a class="btn btn-primary" asp-page="/Account/Login">Đăng nhập</a>
+    }
 </div>
