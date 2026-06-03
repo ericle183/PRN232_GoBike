@@ -1,0 +1,95 @@
+@page "{id:int?}"
+@model WebUI.Pages.Rentals.CompleteModel
+@{
+    ViewData["Title"] = "Rentals / Complete";
+}
+
+<div class="d-flex justify-content-between align-items-center mb-4">
+    <h1 class="h4 mb-0">Complete Rental</h1>
+    <a asp-page="Details" asp-route-id="@Model.Rental.Id" class="btn btn-outline-secondary">Back</a>
+</div>
+
+@if (!string.IsNullOrEmpty(Model.ErrorMessage))
+{
+    <div class="alert alert-danger">@Model.ErrorMessage</div>
+}
+
+<div class="card">
+    <div class="card-header bg-success text-white">
+        <h2 class="h6 mb-0">Complete Rental Contract</h2>
+    </div>
+    <div class="card-body">
+        <dl class="row mb-3">
+            <dt class="col-sm-4 text-muted">Motorcycle</dt>
+            <dd class="col-sm-8">@Model.Rental.MotorcycleLicensePlate</dd>
+
+            <dt class="col-sm-4 text-muted">Rental Date</dt>
+            <dd class="col-sm-8">@Model.Rental.RentalDate.ToString("dd/MM/yyyy")</dd>
+
+            <dt class="col-sm-4 text-muted">Expected Return</dt>
+            <dd class="col-sm-8">@Model.Rental.ExpectedReturnDate.ToString("dd/MM/yyyy")</dd>
+
+            <dt class="col-sm-4 text-muted">Daily Rate</dt>
+            <dd class="col-sm-8">@Model.Rental.DailyRate.ToString("N0") VND</dd>
+        </dl>
+
+        <form method="post">
+            <div class="row">
+                <div class="col-md-6">
+                    <div class="mb-3">
+                        <label class="form-label fw-bold" for="ActualReturnDate">
+                            Actual Return Date <span style="color: #EF4444;">*</span>
+                        </label>
+                        <input class="form-control" id="ActualReturnDate" type="date" asp-for="ActualReturnDate" />
+                        <span asp-validation-for="ActualReturnDate" class="text-danger"></span>
+                    </div>
+                </div>
+                <div class="col-md-6">
+                    <div class="mb-3">
+                        <label class="form-label fw-bold" for="EndMileage">
+                            End Mileage (km) <span style="color: #EF4444;">*</span>
+                        </label>
+                        <input class="form-control" id="EndMileage" type="number" min="0" asp-for="EndMileage" oninput="estimateFinalAmount()" />
+                        <span asp-validation-for="EndMileage" class="text-danger"></span>
+                    </div>
+                </div>
+            </div>
+
+            <div class="alert alert-info" id="finalAmountPreview" style="display: none;">
+                <strong>Estimated Final Amount:</strong> <span id="finalAmountDisplay">—</span> VND
+                <br /><small class="text-muted">Includes late fees if return date exceeds expected return date.</small>
+            </div>
+
+            <div class="d-flex gap-2">
+                <button type="submit" class="btn btn-success">Complete</button>
+                <a asp-page="Details" asp-route-id="@Model.Rental.Id" class="btn btn-outline-secondary">Cancel</a>
+            </div>
+        </form>
+    </div>
+</div>
+
+@section Scripts {
+    <partial name="_ValidationScriptsPartial" />
+    <script>
+        function estimateFinalAmount() {
+            var rentalDate = new Date('@Model.Rental.RentalDate.ToString("yyyy-MM-dd")');
+            var expectedReturn = new Date('@Model.Rental.ExpectedReturnDate.ToString("yyyy-MM-dd")');
+            var actualReturn = document.getElementById('ActualReturnDate').value;
+            if (!actualReturn) return;
+            var endMileage = parseInt(document.getElementById('EndMileage').value);
+            var dailyRate = @Model.Rental.DailyRate;
+            if (!endMileage && endMileage !== 0) return;
+
+            var actualReturnDate = new Date(actualReturn);
+            var totalDays = Math.ceil((expectedReturn - rentalDate) / (1000 * 60 * 60 * 24)) + 1;
+            var actualDays = Math.ceil((actualReturnDate - rentalDate) / (1000 * 60 * 60 * 24)) + 1;
+            var daysDiff = Math.max(0, actualDays - totalDays);
+            var lateFees = daysDiff * dailyRate;
+            var estimatedFinal = @Model.Rental.DailyRate * actualDays + lateFees;
+
+            var preview = document.getElementById('finalAmountPreview');
+            document.getElementById('finalAmountDisplay').textContent = Math.round(estimatedFinal).toLocaleString();
+            preview.style.display = 'block';
+        }
+    </script>
+}
