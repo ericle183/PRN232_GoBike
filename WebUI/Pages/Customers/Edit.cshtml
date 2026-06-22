@@ -1,0 +1,84 @@
+@page
+@model WebUI.Pages.Customers.EditModel
+@{
+    ViewData["Title"] = "Customers / Edit";
+}
+
+<div class="d-flex justify-content-between align-items-center mb-4">
+    <h1 class="h4 mb-0">Edit Customer</h1>
+    <a asp-page="Index" class="btn btn-outline-secondary">Back</a>
+</div>
+
+<div class="card">
+    <div class="card-body">
+        <form method="post" novalidate>
+            <div asp-validation-summary="ModelOnly" class="alert alert-danger"></div>
+
+            <div class="row">
+                <div class="col-md-6">
+                    <div class="mb-3">
+                        <label class="form-label fw-bold" for="FullName">
+                            Full Name <span style="color: #EF4444;">*</span>
+                        </label>
+                        <input class="form-control" id="FullName" asp-for="Form.FullName" />
+                        <span asp-validation-for="Form.FullName" class="text-danger"></span>
+                    </div>
+
+                    <div class="mb-3">
+                        <label class="form-label fw-bold" for="Cccd">
+                            CCCD <span style="color: #EF4444;">*</span>
+                        </label>
+                        <input class="form-control" id="Cccd" asp-for="Form.Cccd" />
+                        <span asp-validation-for="Form.Cccd" class="text-danger"></span>
+                    </div>
+
+                    <div class="mb-3">
+                        <label class="form-label fw-bold" for="PhoneNumber">
+                            Phone Number <span style="color: #EF4444;">*</span>
+                        </label>
+                        <input class="form-control" id="PhoneNumber" asp-for="Form.PhoneNumber" />
+                        <span asp-validation-for="Form.PhoneNumber" class="text-danger"></span>
+                    </div>
+                </div>
+
+                <div class="col-md-6">
+                    <div class="mb-3">
+                        <label class="form-label fw-bold" for="Email">
+                            Email <span style="color: #EF4444;">*</span>
+                        </label>
+                        <input class="form-control" id="Email" type="email" asp-for="Form.Email" />
+                        <span asp-validation-for="Form.Email" class="text-danger"></span>
+                    </div>
+
+                    <div class="mb-3">
+                        <label class="form-label fw-bold" for="DateOfBirth">
+                            Date of Birth <span style="color: #EF4444;">*</span>
+                        </label>
+                        <input class="form-control" id="DateOfBirth" type="date" asp-for="Form.DateOfBirth" />
+                        <span asp-validation-for="Form.DateOfBirth" class="text-danger"></span>
+                    </div>
+
+                    <div class="mb-3">
+                        <label class="form-label fw-bold" for="Address">Address</label>
+                        <input class="form-control" id="Address" asp-for="Form.Address" />
+                    </div>
+
+                    <div class="mb-3">
+                        <label class="form-label fw-bold" for="DriverLicenseNo">Driver License</label>
+                        <input class="form-control" id="DriverLicenseNo" asp-for="Form.DriverLicenseNo" />
+                    </div>
+                </div>
+            </div>
+
+            <hr />
+            <div class="d-flex gap-2">
+                <button type="submit" class="btn btn-primary">Save Changes</button>
+                <a asp-page="Index" class="btn btn-outline-secondary">Cancel</a>
+            </div>
+        </form>
+    </div>
+</div>
+
+@section Scripts {
+    <partial name="_ValidationScriptsPartial" />
+}

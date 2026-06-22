@@ -1,0 +1,109 @@
+@page
+@model WebUI.Pages.Rentals.DetailsModel
+@{
+    ViewData["Title"] = "Rentals / Details";
+}
+
+<div class="d-flex justify-content-between align-items-center mb-4">
+    <h1 class="h4 mb-0">Rental Contract Details</h1>
+    <div>
+        @if (User.IsInRole("Admin"))
+        {
+            @if (Model.Rental.Status == 1)
+            {
+                <a asp-page="Activate" asp-route-id="@Model.Rental.Id" class="btn btn-success">Activate</a>
+                <a asp-page="Cancel" asp-route-id="@Model.Rental.Id" class="btn btn-danger">Cancel</a>
+            }
+            else if (Model.Rental.Status == 2)
+            {
+                <a asp-page="Complete" asp-route-id="@Model.Rental.Id" class="btn btn-success">Complete</a>
+            }
+        }
+        <a asp-page="Index" class="btn btn-outline-secondary">Back</a>
+    </div>
+</div>
+
+@if (TempData["SuccessMessage"] != null)
+{
+    <div class="alert alert-success">@TempData["SuccessMessage"]</div>
+}
+
+<div class="card mb-4">
+    <div class="card-body">
+        <div class="row">
+            <div class="col-md-6">
+                <dl class="row mb-0">
+                    <dt class="col-sm-4 text-muted">ID</dt>
+                    <dd class="col-sm-8">#@Model.Rental.Id</dd>
+
+                    <dt class="col-sm-4 text-muted">Customer</dt>
+                    <dd class="col-sm-8">@Model.Rental.CustomerFullName</dd>
+
+                    <dt class="col-sm-4 text-muted">Motorcycle</dt>
+                    <dd class="col-sm-8">@Model.Rental.MotorcycleLicensePlate</dd>
+
+                    <dt class="col-sm-4 text-muted">Rental Date</dt>
+                    <dd class="col-sm-8">@Model.Rental.RentalDate.ToString("dd/MM/yyyy")</dd>
+
+                    <dt class="col-sm-4 text-muted">Expected Return</dt>
+                    <dd class="col-sm-8">@Model.Rental.ExpectedReturnDate.ToString("dd/MM/yyyy")</dd>
+
+                    @if (Model.Rental.ActualReturnDate.HasValue)
+                    {
+                        <dt class="col-sm-4 text-muted">Actual Return</dt>
+                        <dd class="col-sm-8">@Model.Rental.ActualReturnDate.Value.ToString("dd/MM/yyyy")</dd>
+                    }
+                </dl>
+            </div>
+            <div class="col-md-6">
+                <dl class="row mb-0">
+                    <dt class="col-sm-4 text-muted">Status</dt>
+                    <dd class="col-sm-8">
+                        <span class="badge @WebUI.Pages.Rentals.DetailsModel.GetStatusBadgeClass(Model.Rental.Status)">
+                            @WebUI.Pages.Rentals.DetailsModel.GetStatusName(Model.Rental.Status)
+                        </span>
+                    </dd>
+
+                    <dt class="col-sm-4 text-muted">Daily Rate</dt>
+                    <dd class="col-sm-8">@Model.Rental.DailyRate.ToString("N0") VND</dd>
+
+                    <dt class="col-sm-4 text-muted">Total Amount</dt>
+                    <dd class="col-sm-8">@Model.Rental.TotalAmount.ToString("N0") VND</dd>
+
+                    <dt class="col-sm-4 text-muted">Deposit</dt>
+                    <dd class="col-sm-8">@Model.Rental.DepositAmount.ToString("N0") VND</dd>
+
+                    @if (Model.Rental.FinalAmount > 0)
+                    {
+                        <dt class="col-sm-4 text-muted">Final Amount</dt>
+                        <dd class="col-sm-8">@Model.Rental.FinalAmount.ToString("N0") VND</dd>
+                    }
+
+                    @if (Model.Rental.StartMileage.HasValue)
+                    {
+                        <dt class="col-sm-4 text-muted">Start Mileage</dt>
+                        <dd class="col-sm-8">@Model.Rental.StartMileage km</dd>
+                    }
+
+                    @if (Model.Rental.EndMileage.HasValue)
+                    {
+                        <dt class="col-sm-4 text-muted">End Mileage</dt>
+                        <dd class="col-sm-8">@Model.Rental.EndMileage km</dd>
+                    }
+
+                    <dt class="col-sm-4 text-muted">Created By</dt>
+                    <dd class="col-sm-8">@Model.Rental.CreatedBy</dd>
+                </dl>
+            </div>
+        </div>
+
+        @if (!string.IsNullOrEmpty(Model.Rental.Notes))
+        {
+            <hr />
+            <dl class="row mb-0">
+                <dt class="col-sm-2 text-muted">Notes</dt>
+                <dd class="col-sm-10">@Model.Rental.Notes</dd>
+            </dl>
+        }
+    </div>
+</div>

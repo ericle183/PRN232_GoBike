@@ -1,6 +1,7 @@
 using Microsoft.AspNetCore.Authentication.Cookies;
 using Microsoft.AspNetCore.Http;
 using WebUI.Extensions;
+using WebUI.Services;
 
 var builder = WebApplication.CreateBuilder(args);
 
@@ -20,6 +21,9 @@ builder.Services.AddGoBikeApiClient(builder.Configuration, builder.Environment);
 builder.Services.AddRazorPages(options =>
 {
     options.Conventions.AuthorizeFolder("/Admin", "AdminOnly");
+    options.Conventions.AuthorizeFolder("/Motorcycle", "AdminOrStaff");
+    options.Conventions.AuthorizeFolder("/Customers", "AdminOrStaff");
+    options.Conventions.AuthorizeFolder("/Rentals", "AdminOrStaff");
 });
 
 builder.Services.AddAuthentication(CookieAuthenticationDefaults.AuthenticationScheme)
@@ -41,6 +45,14 @@ builder.Services.AddAuthorization(options =>
     options.AddPolicy("StaffOnly", policy => policy.RequireRole("Staff", "Admin"));
     options.AddPolicy("AdminOrStaff", policy => policy.RequireRole("Admin", "Staff"));
 });
+
+builder.Services.AddHttpClient("GobikeApi", client =>
+{
+    var apiSettings = builder.Configuration.GetSection(WebUI.Configuration.ApiSettings.SectionName);
+    var baseUrl = apiSettings["BaseUrl"] ?? "https://localhost:7144";
+    client.BaseAddress = new Uri(baseUrl.TrimEnd('/') + "/");
+    client.DefaultRequestHeaders.Add("Accept", "application/json");
+}).AddHttpMessageHandler<ApiAuthCookieHandler>();
 
 var app = builder.Build();
 

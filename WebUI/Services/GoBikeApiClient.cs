@@ -2,7 +2,9 @@ using System.Net;
 using System.Net.Http.Json;
 using System.Text.Json;
 using BusinessObjects.DTOs;
+using BusinessObjects.Enums;
 using Microsoft.Extensions.Options;
+using Services.DTOs;
 using WebUI.Configuration;
 using WebUI.Services.Internal;
 
@@ -111,6 +113,70 @@ public class GoBikeApiClient : IGoBikeApiClient
         if (!response.IsSuccessStatusCode)
             return (false, await ApiResponseReader.ReadErrorMessageAsync(response));
         return (true, null);
+    }
+
+    public async Task<(bool Success, PaginatedResult<MotorcycleDto>? Result, string? Error)> GetMotorcyclesAsync(
+        string? search,
+        MotorcycleStatus? status,
+        decimal? minPrice,
+        decimal? maxPrice,
+        int pageNumber,
+        int pageSize = 10)
+    {
+        var query = $"api/motorcycles?page={pageNumber}&pageSize={pageSize}";
+        if (!string.IsNullOrWhiteSpace(search))
+            query += $"&search={Uri.EscapeDataString(search)}";
+        if (status.HasValue)
+            query += $"&status={status.Value}";
+        if (minPrice.HasValue)
+            query += $"&minPrice={minPrice.Value}";
+        if (maxPrice.HasValue)
+            query += $"&maxPrice={maxPrice.Value}";
+
+        var response = await httpClient.GetAsync(query);
+        return await ReadAsync<PaginatedResult<MotorcycleDto>>(response);
+    }
+
+    public Task<(bool Success, MotorcycleDetailDto? Motorcycle, string? Error)> GetMotorcycleAsync(int id)
+        => ReadMotorcycleDetailAsync(id);
+
+    public async Task<(bool Success, MotorcycleDto? Motorcycle, string? Error)> CreateMotorcycleAsync(
+        CreateMotorcycleRequest request)
+    {
+        var response = await httpClient.PostAsJsonAsync("api/motorcycles", request, JsonOptions);
+        return await ReadAsync<MotorcycleDto>(response);
+    }
+
+    public async Task<(bool Success, MotorcycleDto? Motorcycle, string? Error)> UpdateMotorcycleAsync(
+        int id,
+        UpdateMotorcycleRequest request)
+    {
+        var response = await httpClient.PutAsJsonAsync($"api/motorcycles/{id}", request, JsonOptions);
+        return await ReadAsync<MotorcycleDto>(response);
+    }
+
+    public async Task<(bool Success, string? Error)> DeleteMotorcycleAsync(int id)
+    {
+        var response = await httpClient.DeleteAsync($"api/motorcycles/{id}");
+        if (response.StatusCode == HttpStatusCode.NotFound)
+            return (false, "Motorcycle not found");
+        if (!response.IsSuccessStatusCode)
+            return (false, await ApiResponseReader.ReadErrorMessageAsync(response));
+        return (true, null);
+    }
+
+    public async Task<(bool Success, List<MotorcycleTypeDto>? Types, string? Error)> GetMotorcycleTypesAsync()
+    {
+        var response = await httpClient.GetAsync("api/motorcycletypes");
+        return await ReadAsync<List<MotorcycleTypeDto>>(response);
+    }
+
+    private async Task<(bool Success, MotorcycleDetailDto? Motorcycle, string? Error)> ReadMotorcycleDetailAsync(int id)
+    {
+        var response = await httpClient.GetAsync($"api/motorcycles/{id}");
+        if (response.StatusCode == HttpStatusCode.NotFound)
+            return (false, null, "Motorcycle not found");
+        return await ReadAsync<MotorcycleDetailDto>(response);
     }
 
     private static async Task<(bool Success, T? Data, string? Error)> ReadAsync<T>(HttpResponseMessage response)

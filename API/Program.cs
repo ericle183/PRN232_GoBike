@@ -1,7 +1,10 @@
 using BusinessObjects.Entities;
 using DataAccessObjects;
+using Microsoft.AspNetCore.OData;
 using Microsoft.AspNetCore.Authentication.Cookies;
 using Microsoft.EntityFrameworkCore;
+using Microsoft.OData.Edm;
+using Microsoft.OData.ModelBuilder;
 using Repositories;
 using Services;
 using Services.Interfaces;
@@ -48,12 +51,27 @@ builder.Services.AddAuthorization(options =>
     options.AddPolicy("AdminOrStaff", policy => policy.RequireRole("Admin", "Staff"));
 });
 
+IEdmModel GetEdmModel()
+{
+    var odataBuilder = new ODataConventionModelBuilder();
+    odataBuilder.EntitySet<Motorcycle>("Motorcycles");
+    return odataBuilder.GetEdmModel();
+}
+
 builder.Services.AddControllers()
     .AddJsonOptions(options =>
     {
         options.JsonSerializerOptions.Converters.Add(
             new System.Text.Json.Serialization.JsonStringEnumConverter());
-    });
+    })
+    .AddOData(options => options
+        .Select()
+        .Filter()
+        .OrderBy()
+        .Count()
+        .Expand()
+        .SetMaxTop(100)
+        .AddRouteComponents("odata", GetEdmModel()));
 
 builder.Services.AddEndpointsApiExplorer();
 builder.Services.AddOpenApi();
