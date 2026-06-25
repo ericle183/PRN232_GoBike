@@ -111,7 +111,7 @@
                 {
                     var rentalBadge = rental.Status switch
                     {
-                        RentalStatus.Pending => "badge-maintenance",
+                        RentalStatus.Reserved => "badge-maintenance",
                         RentalStatus.Active => "badge-available",
                         RentalStatus.Completed => "bg-secondary",
                         RentalStatus.Cancelled => "bg-danger",

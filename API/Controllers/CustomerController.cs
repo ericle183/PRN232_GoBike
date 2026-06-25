@@ -1,5 +1,4 @@
 using BusinessObjects.Entities;
-using BusinessObjects.Enums;
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
 using Services.DTOs;
@@ -48,7 +47,6 @@ public class CustomerController : ControllerBase
         return customer is null ? NotFound() : Ok(customer);
     }
 
-    [Authorize(Roles = "Admin")]
     [HttpPost]
     public async Task<ActionResult> Create([FromBody] CustomerCreateDto dto)
     {
@@ -70,8 +68,15 @@ public class CustomerController : ControllerBase
             CreatedAt = DateTime.UtcNow
         };
 
-        await customerService.CreateAsync(customer);
-        return CreatedAtAction(nameof(GetById), new { id = customer.Id }, customer);
+        try
+        {
+            await customerService.CreateAsync(customer);
+            return CreatedAtAction(nameof(GetById), new { id = customer.Id }, customer);
+        }
+        catch (InvalidOperationException ex)
+        {
+            return BadRequest(new { message = ex.Message });
+        }
     }
 
     [HttpPut("{id}")]
@@ -100,15 +105,51 @@ public class CustomerController : ControllerBase
             IsActive = dto.IsActive
         };
 
-        await customerService.UpdateAsync(customer);
-        return NoContent();
+        try
+        {
+            await customerService.UpdateAsync(customer);
+            return NoContent();
+        }
+        catch (InvalidOperationException ex)
+        {
+            return BadRequest(new { message = ex.Message });
+        }
     }
 
     [Authorize(Roles = "Admin")]
     [HttpDelete("{id}")]
     public async Task<ActionResult> Delete(int id)
     {
-        await customerService.DeleteAsync(id);
-        return NoContent();
+        return await Deactivate(id);
+    }
+
+    [Authorize(Roles = "Admin")]
+    [HttpPatch("{id}/deactivate")]
+    public async Task<ActionResult> Deactivate(int id)
+    {
+        try
+        {
+            await customerService.DeactivateAsync(id);
+            return Ok(new { message = "Customer deactivated successfully." });
+        }
+        catch (InvalidOperationException ex)
+        {
+            return NotFound(new { message = ex.Message });
+        }
+    }
+
+    [Authorize(Roles = "Admin")]
+    [HttpPatch("{id}/reactivate")]
+    public async Task<ActionResult> Reactivate(int id)
+    {
+        try
+        {
+            await customerService.ReactivateAsync(id);
+            return Ok(new { message = "Customer reactivated successfully." });
+        }
+        catch (InvalidOperationException ex)
+        {
+            return NotFound(new { message = ex.Message });
+        }
     }
 }

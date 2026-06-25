@@ -1,4 +1,6 @@
+using System.Security.Claims;
 using BusinessObjects.Entities;
+using BusinessObjects.Enums;
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
 using Services.DTOs;
@@ -8,6 +10,7 @@ namespace API.Controllers;
 
 [Authorize(Roles = "Admin,Staff")]
 [ApiController]
+[Route("api/rental-contracts")]
 [Route("api/[controller]")]
 public class RentalContractController : ControllerBase
 {
@@ -22,7 +25,7 @@ public class RentalContractController : ControllerBase
     public async Task<ActionResult<IEnumerable<RentalContractListDto>>> GetAll(
         [FromQuery] int? customerId = null,
         [FromQuery] int? motorcycleId = null,
-        [FromQuery] BusinessObjects.Enums.RentalStatus? status = null,
+        [FromQuery] RentalStatus? status = null,
         [FromQuery] DateTime? fromDate = null,
         [FromQuery] DateTime? toDate = null,
         [FromQuery] int page = 1,
@@ -31,167 +34,190 @@ public class RentalContractController : ControllerBase
         var data = await rentalContractService.GetAllAsync();
 
         if (customerId.HasValue)
-        {
             data = data.Where(x => x.CustomerId == customerId.Value).ToList();
-        }
 
         if (motorcycleId.HasValue)
-        {
             data = data.Where(x => x.MotorcycleId == motorcycleId.Value).ToList();
-        }
 
         if (status.HasValue)
-        {
             data = data.Where(x => x.Status == status.Value).ToList();
-        }
 
         if (fromDate.HasValue)
-        {
-            data = data.Where(x => x.RentalDate >= fromDate.Value).ToList();
-        }
+            data = data.Where(x => x.StartDate.Date >= fromDate.Value.Date).ToList();
 
         if (toDate.HasValue)
-        {
-            data = data.Where(x => x.RentalDate <= toDate.Value).ToList();
-        }
+            data = data.Where(x => x.StartDate.Date <= toDate.Value.Date).ToList();
+
+        page = Math.Max(1, page);
+        pageSize = Math.Clamp(pageSize, 1, 100);
 
         var result = data
             .OrderByDescending(x => x.CreatedAt)
             .Skip((page - 1) * pageSize)
             .Take(pageSize)
-            .Select(x => new RentalContractListDto
-            {
-                Id = x.Id,
-                CustomerFullName = x.Customer?.FullName,
-                MotorcycleLicensePlate = x.Motorcycle?.LicensePlate,
-                RentalDate = x.RentalDate,
-                ExpectedReturnDate = x.ExpectedReturnDate,
-                DailyRate = x.DailyRate,
-                TotalAmount = x.TotalAmount,
-                Status = (int)x.Status,
-                CreatedBy = x.CreatedBy
-            })
+            .Select(MapListDto)
             .ToList();
 
         return Ok(result);
     }
 
-    [HttpGet("{id}")]
+    [HttpGet("{id:int}")]
     public async Task<ActionResult<RentalContractDetailDto>> GetById(int id)
     {
         var rental = await rentalContractService.GetByIdAsync(id);
-        if (rental is null) return NotFound();
-        return Ok(new RentalContractDetailDto
+        return rental is null ? NotFound(new { message = "Rental contract not found" }) : Ok(MapDetailDto(rental));
+    }
+
+    [HttpPost("reserve")]
+    public async Task<ActionResult<RentalContractDetailDto>> Reserve([FromBody] ReserveRentalRequestDto request)
+        => await ExecuteWorkflowAsync(async () =>
         {
-            Id = rental.Id,
-            CustomerId = rental.CustomerId,
-            MotorcycleId = rental.MotorcycleId,
-            CustomerFullName = rental.Customer?.FullName,
-            MotorcycleLicensePlate = rental.Motorcycle?.LicensePlate,
-            RentalDate = rental.RentalDate,
-            ExpectedReturnDate = rental.ExpectedReturnDate,
-            ActualReturnDate = rental.ActualReturnDate,
-            DailyRate = rental.DailyRate,
-            TotalAmount = rental.TotalAmount,
-            DepositAmount = rental.DepositAmount,
-            FinalAmount = rental.FinalAmount,
-            Status = (int)rental.Status,
-            StartMileage = rental.StartMileage,
-            EndMileage = rental.EndMileage,
-            Notes = rental.Notes,
-            CreatedBy = rental.CreatedBy
+            var rental = await rentalContractService.ReserveAsync(request, GetUserId());
+            return CreatedAtAction(nameof(GetById), new { id = rental.Id }, MapDetailDto(rental));
         });
-    }
 
-    [Authorize(Roles = "Admin")]
-    [HttpPost]
-    public async Task<ActionResult> Create([FromBody] RentalContractCreateDto dto)
+    [HttpPost("rent-now")]
+    public async Task<ActionResult<RentalContractDetailDto>> RentNow([FromBody] RentNowRequestDto request)
+        => await ExecuteWorkflowAsync(async () =>
+        {
+            var rental = await rentalContractService.RentNowAsync(request, GetUserId());
+            return CreatedAtAction(nameof(GetById), new { id = rental.Id }, MapDetailDto(rental));
+        });
+
+    [HttpPost("{id:int}/handover")]
+    public async Task<ActionResult<RentalContractDetailDto>> Handover(int id, [FromBody] HandoverRentalRequestDto request)
+        => await ExecuteWorkflowAsync(async () =>
+        {
+            var rental = await rentalContractService.HandoverAsync(id, request, GetUserId());
+            return Ok(MapDetailDto(rental));
+        });
+
+    [HttpPost("{id:int}/complete")]
+    public async Task<ActionResult<RentalContractDetailDto>> Complete(int id, [FromBody] CompleteRentalRequestDto request)
+        => await ExecuteWorkflowAsync(async () =>
+        {
+            var rental = await rentalContractService.CompleteAsync(id, request, GetUserId());
+            return Ok(MapDetailDto(rental));
+        });
+
+    [HttpPost("{id:int}/cancel")]
+    public async Task<ActionResult<RentalContractDetailDto>> Cancel(int id, [FromBody] CancelRentalRequestDto request)
+        => await ExecuteWorkflowAsync(async () =>
+        {
+            var rental = await rentalContractService.CancelAsync(id, request, GetUserId());
+            return Ok(MapDetailDto(rental));
+        });
+
+    [HttpPost("{id:int}/no-show")]
+    public async Task<ActionResult<RentalContractDetailDto>> MarkNoShow(int id, [FromBody] NoShowRentalRequestDto request)
+        => await ExecuteWorkflowAsync(async () =>
+        {
+            var rental = await rentalContractService.MarkNoShowAsync(id, request, GetUserId());
+            return Ok(MapDetailDto(rental));
+        });
+
+    private async Task<ActionResult<RentalContractDetailDto>> ExecuteWorkflowAsync(Func<Task<ActionResult<RentalContractDetailDto>>> action)
     {
         if (!ModelState.IsValid)
-        {
             return ValidationProblem(ModelState);
+
+        try
+        {
+            return await action();
         }
-
-        var rental = new RentalContract
+        catch (InvalidOperationException ex)
         {
-            CustomerId = dto.CustomerId,
-            MotorcycleId = dto.MotorcycleId,
-            RentalDate = dto.RentalDate,
-            ExpectedReturnDate = dto.ExpectedReturnDate,
-            DepositAmount = dto.DepositAmount,
-            Notes = dto.Notes,
-            CreatedBy = dto.CreatedBy,
-            IsActive = true
-        };
-
-        await rentalContractService.CreateAsync(rental);
-        return CreatedAtAction(nameof(GetById), new { id = rental.Id }, rental);
-    }
-
-    [Authorize(Roles = "Admin")]
-    [HttpPut("{id}")]
-    public async Task<ActionResult> Update(int id, [FromBody] RentalContractUpdateDto dto)
-    {
-        if (id != dto.Id)
-        {
-            return BadRequest("Route id and payload id do not match");
+            return BadRequest(new { message = ex.Message });
         }
-
-        if (!ModelState.IsValid)
-        {
-            return ValidationProblem(ModelState);
-        }
-
-        var rental = new RentalContract
-        {
-            Id = dto.Id,
-            CustomerId = dto.CustomerId,
-            MotorcycleId = dto.MotorcycleId,
-            RentalDate = dto.RentalDate,
-            ExpectedReturnDate = dto.ExpectedReturnDate,
-            ActualReturnDate = dto.ActualReturnDate,
-            DepositAmount = dto.DepositAmount,
-            Notes = dto.Notes,
-            CreatedBy = dto.CreatedBy,
-            StartMileage = dto.StartMileage,
-            EndMileage = dto.EndMileage,
-            Status = dto.Status,
-            IsActive = dto.IsActive
-        };
-
-        await rentalContractService.UpdateAsync(rental);
-        return NoContent();
     }
 
-    [Authorize(Roles = "Admin")]
-    [HttpDelete("{id}")]
-    public async Task<ActionResult> Delete(int id)
+    private int? GetUserId()
     {
-        await rentalContractService.DeleteAsync(id);
-        return NoContent();
+        var value = User.FindFirst(ClaimTypes.NameIdentifier)?.Value;
+        return int.TryParse(value, out var id) ? id : null;
     }
 
-    [Authorize(Roles = "Admin")]
-    [HttpPut("{id}/activate")]
-    public async Task<ActionResult> Activate(int id, [FromQuery] int startMileage)
+    private static RentalContractListDto MapListDto(RentalContract x) => new()
     {
-        await rentalContractService.ActivateAsync(id, startMileage);
-        return NoContent();
-    }
+        Id = x.Id,
+        CustomerFullName = x.Customer?.FullName,
+        MotorcycleLicensePlate = x.Motorcycle?.LicensePlate,
+        RentalDate = x.StartDate,
+        ExpectedReturnDate = x.EndDate,
+        DailyRate = x.DailyPrice,
+        TotalAmount = x.TotalAmount,
+        DepositAmount = x.DepositAmount,
+        FinalAmount = x.FinalAmount,
+        CancellationFee = x.CancellationFee,
+        Status = (int)x.Status,
+        StatusText = x.Status.ToString(),
+        CreatedBy = x.CreatedBy
+    };
 
-    [Authorize(Roles = "Admin")]
-    [HttpPut("{id}/complete")]
-    public async Task<ActionResult> Complete(int id, [FromQuery] DateTime actualReturnDate, [FromQuery] int endMileage)
+    private static RentalContractDetailDto MapDetailDto(RentalContract rental) => new()
     {
-        await rentalContractService.CompleteAsync(id, actualReturnDate, endMileage);
-        return NoContent();
-    }
-
-    [Authorize(Roles = "Admin")]
-    [HttpPut("{id}/cancel")]
-    public async Task<ActionResult> Cancel(int id)
-    {
-        await rentalContractService.CancelAsync(id);
-        return NoContent();
-    }
+        Id = rental.Id,
+        CustomerId = rental.CustomerId,
+        MotorcycleId = rental.MotorcycleId,
+        CustomerFullName = rental.Customer?.FullName,
+        MotorcycleLicensePlate = rental.Motorcycle?.LicensePlate,
+        RentalDate = rental.StartDate,
+        ExpectedReturnDate = rental.EndDate,
+        ActualReturnDate = rental.ActualReturnDate,
+        DailyRate = rental.DailyPrice,
+        RentalDays = rental.RentalDays,
+        TotalAmount = rental.TotalAmount,
+        DepositAmount = rental.DepositAmount,
+        LateDays = rental.LateDays,
+        LateFee = rental.LateFee,
+        DamageFee = rental.DamageFee,
+        DamageDescription = rental.DamageDescription,
+        OtherFee = rental.OtherFee,
+        OtherFeeDescription = rental.OtherFeeDescription,
+        DiscountAmount = rental.DiscountAmount,
+        DiscountReason = rental.DiscountReason,
+        FinalAmount = rental.FinalAmount,
+        RemainingAmount = rental.RemainingAmount,
+        AdditionalPaymentAmount = rental.AdditionalPaymentAmount,
+        RefundAmount = rental.RefundAmount,
+        CancellationFee = rental.CancellationFee,
+        Status = (int)rental.Status,
+        StatusText = rental.Status.ToString(),
+        StartMileage = rental.Inspections.FirstOrDefault(i => i.InspectionType == InspectionType.BeforeRental)?.Mileage,
+        EndMileage = rental.Inspections.FirstOrDefault(i => i.InspectionType == InspectionType.AfterReturn)?.Mileage,
+        Notes = rental.Notes,
+        CreatedBy = rental.CreatedBy,
+        CompletedAt = rental.CompletedAt,
+        CancelledAt = rental.CancelledAt,
+        NoShowAt = rental.NoShowAt,
+        CancellationReason = rental.CancellationReason,
+        NoShowReason = rental.NoShowReason,
+        Inspections = rental.Inspections
+            .OrderBy(i => i.CreatedAt)
+            .Select(i => new RentalInspectionDto
+            {
+                Id = i.Id,
+                InspectionType = i.InspectionType.ToString(),
+                Mileage = i.Mileage,
+                FuelLevel = i.FuelLevel,
+                VehicleCondition = i.VehicleCondition,
+                HasDamage = i.HasDamage,
+                DamageDescription = i.DamageDescription,
+                AccessoriesNote = i.AccessoriesNote,
+                ImageUrl = i.ImageUrl,
+                Note = i.Note,
+                CreatedAt = i.CreatedAt
+            }).ToList(),
+        Payments = rental.Payments
+            .OrderBy(p => p.CreatedAt)
+            .Select(p => new RentalPaymentDto
+            {
+                Id = p.Id,
+                PaymentType = p.PaymentType.ToString(),
+                Amount = p.Amount,
+                PaymentMethod = p.PaymentMethod.ToString(),
+                Note = p.Note,
+                CreatedAt = p.CreatedAt
+            }).ToList()
+    };
 }

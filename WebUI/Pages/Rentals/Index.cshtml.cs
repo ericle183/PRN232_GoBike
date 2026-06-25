@@ -96,7 +96,7 @@ public class IndexModel : PageModel
 
     public static string GetStatusName(int status) => status switch
     {
-        1 => "Pending",
+        1 => "Reserved",
         2 => "Active",
         3 => "Completed",
         4 => "Cancelled",

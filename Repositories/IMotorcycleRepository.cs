@@ -7,6 +7,7 @@ public interface IMotorcycleRepository : IRepository<Motorcycle>
 {
     Task<List<Motorcycle>> GetAvailableAsync();
     Task<bool> ExistsByLicensePlateAsync(string licensePlate, int? excludeId = null);
+    Task<bool> ExistsByRegistrationNoAsync(string registrationNo, int? excludeId = null);
     Task<(List<Motorcycle> Items, int TotalCount)> SearchAsync(
         string? searchTerm,
         MotorcycleStatus? status,

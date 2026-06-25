@@ -25,9 +25,6 @@ public class Motorcycle
 
     public MotorcycleStatus Status { get; set; } = MotorcycleStatus.Available;
 
-    [Column(TypeName = "decimal(18,2)")]
-    public decimal DailyRate { get; set; }
-
     [Required]
     [MaxLength(30)]
     public string Color { get; set; } = string.Empty;
@@ -47,4 +44,6 @@ public class Motorcycle
     public MotorcycleType? VehicleType { get; set; }
 
     public ICollection<RentalContract> RentalContracts { get; set; } = new List<RentalContract>();
+
+    public ICollection<MaintenanceRecord> MaintenanceRecords { get; set; } = new List<MaintenanceRecord>();
 }

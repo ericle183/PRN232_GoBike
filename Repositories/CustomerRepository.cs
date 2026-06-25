@@ -14,6 +14,9 @@ public class CustomerRepository : Repository<Customer>, ICustomerRepository
     public Task<bool> ExistsByCccdAsync(string cccd, int? excludeId = null)
         => dbSet.AnyAsync(x => x.CCCD == cccd && (!excludeId.HasValue || x.Id != excludeId.Value));
 
+    public Task<bool> ExistsByDriverLicenseNoAsync(string driverLicenseNo, int? excludeId = null)
+        => dbSet.AnyAsync(x => x.DriverLicenseNo == driverLicenseNo && (!excludeId.HasValue || x.Id != excludeId.Value));
+
     public Task<List<Customer>> SearchAsync(string? keyword, int page, int pageSize)
     {
         var query = dbSet.AsQueryable();
@@ -24,7 +27,8 @@ public class CustomerRepository : Repository<Customer>, ICustomerRepository
             query = query.Where(x =>
                 x.FullName.ToLower().Contains(keyword) ||
                 x.CCCD.ToLower().Contains(keyword) ||
-                x.PhoneNumber.ToLower().Contains(keyword));
+                x.PhoneNumber.ToLower().Contains(keyword) ||
+                x.DriverLicenseNo.ToLower().Contains(keyword));
         }
 
         return query

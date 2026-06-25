@@ -16,12 +16,18 @@ public class RentalContractRepository : Repository<RentalContract>, IRentalContr
         => dbSet
             .Include(x => x.Customer)
             .Include(x => x.Motorcycle)
+                .ThenInclude(m => m!.VehicleType)
+            .Include(x => x.Inspections)
+            .Include(x => x.Payments)
             .ToListAsync();
 
     public override Task<RentalContract?> GetByIdAsync(int id)
         => dbSet
             .Include(x => x.Customer)
             .Include(x => x.Motorcycle)
+                .ThenInclude(m => m!.VehicleType)
+            .Include(x => x.Inspections)
+            .Include(x => x.Payments)
             .FirstOrDefaultAsync(x => x.Id == id);
 
     public Task<List<RentalContract>> GetByCustomerIdAsync(int customerId)
@@ -32,7 +38,11 @@ public class RentalContractRepository : Repository<RentalContract>, IRentalContr
 
     public Task<List<RentalContract>> SearchAsync(int? customerId, int? motorcycleId, RentalStatus? status, DateTime? fromDate, DateTime? toDate, int page, int pageSize)
     {
-        var query = dbSet.AsQueryable();
+        var query = dbSet
+            .Include(x => x.Customer)
+            .Include(x => x.Motorcycle)
+                .ThenInclude(m => m!.VehicleType)
+            .AsQueryable();
 
         if (customerId.HasValue)
         {
