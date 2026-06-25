@@ -1,26 +1,76 @@
+using Microsoft.AspNetCore.Authentication.Cookies;
+using Microsoft.AspNetCore.Http;
+using WebUI.Extensions;
+using WebUI.Services;
+
 var builder = WebApplication.CreateBuilder(args);
 
-// Add services to the container.
-builder.Services.AddRazorPages();
+builder.Services.AddHttpContextAccessor();
+builder.Services.AddDistributedMemoryCache();
+builder.Services.AddSession(options =>
+{
+    options.IdleTimeout = TimeSpan.FromHours(12);
+    options.Cookie.Name = ".GoBike.Session";
+    options.Cookie.HttpOnly = true;
+    options.Cookie.IsEssential = true;
+    options.Cookie.SameSite = SameSiteMode.Lax;
+});
+
+builder.Services.AddGoBikeApiClient(builder.Configuration, builder.Environment);
+
+builder.Services.AddRazorPages(options =>
+{
+    options.Conventions.AuthorizeFolder("/Admin", "AdminOnly");
+    options.Conventions.AuthorizeFolder("/Motorcycle", "AdminOrStaff");
+    options.Conventions.AuthorizeFolder("/Customers", "AdminOrStaff");
+    options.Conventions.AuthorizeFolder("/Rentals", "AdminOrStaff");
+});
+
+builder.Services.AddAuthentication(CookieAuthenticationDefaults.AuthenticationScheme)
+    .AddCookie(options =>
+    {
+        options.LoginPath = "/Account/Login";
+        options.LogoutPath = "/Account/Logout";
+        options.AccessDeniedPath = "/Account/AccessDenied";
+        options.ExpireTimeSpan = TimeSpan.FromHours(12);
+        options.SlidingExpiration = true;
+        options.Cookie.HttpOnly = true;
+        options.Cookie.SameSite = SameSiteMode.Lax;
+        options.Cookie.SecurePolicy = CookieSecurePolicy.SameAsRequest;
+    });
+
+builder.Services.AddAuthorization(options =>
+{
+    options.AddPolicy("AdminOnly", policy => policy.RequireRole("Admin"));
+    options.AddPolicy("StaffOnly", policy => policy.RequireRole("Staff", "Admin"));
+    options.AddPolicy("AdminOrStaff", policy => policy.RequireRole("Admin", "Staff"));
+});
+
+builder.Services.AddHttpClient("GobikeApi", client =>
+{
+    var apiSettings = builder.Configuration.GetSection(WebUI.Configuration.ApiSettings.SectionName);
+    var baseUrl = apiSettings["BaseUrl"] ?? "https://localhost:7144";
+    client.BaseAddress = new Uri(baseUrl.TrimEnd('/') + "/");
+    client.DefaultRequestHeaders.Add("Accept", "application/json");
+}).AddHttpMessageHandler<ApiAuthCookieHandler>();
 
 var app = builder.Build();
 
-// Configure the HTTP request pipeline.
 if (!app.Environment.IsDevelopment())
 {
     app.UseExceptionHandler("/Error");
-    // The default HSTS value is 30 days. You may want to change this for production scenarios, see https://aka.ms/aspnetcore-hsts.
     app.UseHsts();
 }
 
 app.UseHttpsRedirection();
-
 app.UseRouting();
-
+app.UseSession();
+app.UseAuthentication();
 app.UseAuthorization();
 
+app.MapGet("/", () => Results.Redirect("/Index"));
+
 app.MapStaticAssets();
-app.MapRazorPages()
-   .WithStaticAssets();
+app.MapRazorPages().WithStaticAssets();
 
 app.Run();

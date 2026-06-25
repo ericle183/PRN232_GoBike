@@ -21,6 +21,9 @@ public class User
     [MaxLength(100)]
     public string? Email { get; set; }
 
+    [MaxLength(15)]
+    public string? PhoneNumber { get; set; }
+
     public BusinessObjects.Enums.UserRole Role { get; set; }
 
     public bool IsActive { get; set; } = true;

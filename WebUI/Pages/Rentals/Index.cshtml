@@ -1,0 +1,107 @@
+@page
+@model WebUI.Pages.Rentals.IndexModel
+@{
+    ViewData["Title"] = "Rentals / List";
+}
+
+<div class="d-flex justify-content-between align-items-center mb-4">
+    <h1 class="h4 mb-0">Rental Contracts</h1>
+    @if (User.IsInRole("Admin"))
+    {
+        <a asp-page="Create" class="btn btn-primary">Create New</a>
+    }
+</div>
+
+<div class="card mb-4">
+    <div class="card-body">
+        <form method="get" class="row g-2">
+            <div class="col-md-2">
+                <select class="form-select" name="FilterCustomerId">
+                    <option value="">-- Customer --</option>
+                    @foreach (var c in Model.Customers)
+                    {
+                        <option value="@c.Id" selected="@(Model.FilterCustomerId == c.Id)">@c.FullName</option>
+                    }
+                </select>
+            </div>
+            <div class="col-md-2">
+                <select class="form-select" name="FilterMotorcycleId">
+                    <option value="">-- Motorcycle --</option>
+                    @foreach (var m in Model.Motorcycles)
+                    {
+                        <option value="@m.Id" selected="@(Model.FilterMotorcycleId == m.Id)">@m.LicensePlate</option>
+                    }
+                </select>
+            </div>
+            <div class="col-md-2">
+                <select class="form-select" name="FilterStatus">
+                    <option value="">-- Status --</option>
+                    <option value="Reserved" selected="@(Model.FilterStatus == "Reserved")">Reserved</option>
+                    <option value="Active" selected="@(Model.FilterStatus == "Active")">Active</option>
+                    <option value="Completed" selected="@(Model.FilterStatus == "Completed")">Completed</option>
+                    <option value="Cancelled" selected="@(Model.FilterStatus == "Cancelled")">Cancelled</option>
+                </select>
+            </div>
+            <div class="col-md-2">
+                <input type="date" class="form-control" name="FilterFromDate" value="@(Model.FilterFromDate?.ToString("yyyy-MM-dd") ?? "")" />
+            </div>
+            <div class="col-md-2">
+                <input type="date" class="form-control" name="FilterToDate" value="@(Model.FilterToDate?.ToString("yyyy-MM-dd") ?? "")" />
+            </div>
+            <div class="col-md-2">
+                <button type="submit" class="btn btn-primary w-100">Filter</button>
+            </div>
+        </form>
+    </div>
+</div>
+
+@if (Model.Rentals.Any())
+{
+    <div class="card">
+        <div class="table-responsive">
+            <table class="table table-hover mb-0">
+                <thead class="table-light">
+                    <tr>
+                        <th>ID</th>
+                        <th>Customer</th>
+                        <th>Motorcycle</th>
+                        <th>Rental Date</th>
+                        <th>Expected Return</th>
+                        <th>Daily Rate</th>
+                        <th>Total</th>
+                        <th>Status</th>
+                        <th>Created By</th>
+                        <th style="width: 100px;">Actions</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    @foreach (var rental in Model.Rentals)
+                    {
+                        <tr>
+                            <td>@rental.Id</td>
+                            <td>@rental.CustomerFullName</td>
+                            <td>@rental.MotorcycleLicensePlate</td>
+                            <td>@rental.RentalDate.ToString("dd/MM/yyyy")</td>
+                            <td>@rental.ExpectedReturnDate.ToString("dd/MM/yyyy")</td>
+                            <td>@rental.DailyRate.ToString("N0") VND</td>
+                            <td>@rental.TotalAmount.ToString("N0") VND</td>
+                            <td>
+                                <span class="badge @WebUI.Pages.Rentals.IndexModel.GetStatusBadgeClass(rental.Status)">
+                                    @WebUI.Pages.Rentals.IndexModel.GetStatusName(rental.Status)
+                                </span>
+                            </td>
+                            <td>@rental.CreatedBy</td>
+                            <td>
+                                <a asp-page="Details" asp-route-id="@rental.Id" class="btn btn-sm btn-outline-primary">Details</a>
+                            </td>
+                        </tr>
+                    }
+                </tbody>
+            </table>
+        </div>
+    </div>
+}
+else
+{
+    <div class="alert alert-info mb-0">No rental contracts found.</div>
+}

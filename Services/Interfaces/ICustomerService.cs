@@ -9,4 +9,6 @@ public interface ICustomerService
     Task CreateAsync(Customer customer);
     Task UpdateAsync(Customer customer);
     Task DeleteAsync(int id);
+    Task DeactivateAsync(int id);
+    Task ReactivateAsync(int id);
 }

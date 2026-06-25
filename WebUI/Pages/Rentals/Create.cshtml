@@ -1,0 +1,113 @@
+@page
+@model WebUI.Pages.Rentals.CreateModel
+@{
+    ViewData["Title"] = "Rentals / Create";
+}
+
+<div class="d-flex justify-content-between align-items-center mb-4">
+    <h1 class="h4 mb-0">Create Rental Contract</h1>
+    <a asp-page="Index" class="btn btn-outline-secondary">Back</a>
+</div>
+
+<div class="card">
+    <div class="card-body">
+        <form method="post" novalidate>
+            <div asp-validation-summary="ModelOnly" class="alert alert-danger"></div>
+
+            <div class="row">
+                <div class="col-md-6">
+                    <div class="mb-3">
+                        <label class="form-label fw-bold" for="CustomerId">
+                            Customer <span style="color: #EF4444;">*</span>
+                        </label>
+                        <select class="form-select" id="CustomerId" asp-for="Form.CustomerId">
+                            <option value="">-- Select Customer --</option>
+                            @foreach (var c in Model.Customers)
+                            {
+                                <option value="@c.Id">@c.FullName</option>
+                            }
+                        </select>
+                        <span asp-validation-for="Form.CustomerId" class="text-danger"></span>
+                    </div>
+
+                    <div class="mb-3">
+                        <label class="form-label fw-bold" for="MotorcycleId">
+                            Motorcycle <span style="color: #EF4444;">*</span>
+                        </label>
+                        <select class="form-select" id="MotorcycleId" asp-for="Form.MotorcycleId" onchange="updateDailyRate()">
+                            <option value="">-- Select Motorcycle --</option>
+                            @foreach (var m in Model.AvailableMotorcycles)
+                            {
+                                <option value="@m.Id"
+                                        data-dailyrate="@m.DailyRate"
+                                        data-mileage="@m.Mileage"
+                                        data-plate="@m.LicensePlate">
+                                    @m.LicensePlate — @m.Brand @m.Model
+                                </option>
+                            }
+                        </select>
+                        <span asp-validation-for="Form.MotorcycleId" class="text-danger"></span>
+                    </div>
+
+                    <div class="alert alert-info mb-3" id="motorcycleInfo" style="display: none;">
+                        <strong>Daily Rate:</strong> <span id="dailyRateDisplay">—</span> VND<br />
+                        <strong>Current Mileage:</strong> <span id="currentMileage">—</span> km
+                    </div>
+                </div>
+
+                <div class="col-md-6">
+                    <div class="mb-3">
+                        <label class="form-label fw-bold" for="RentalDate">
+                            Rental Date <span style="color: #EF4444;">*</span>
+                        </label>
+                        <input class="form-control" id="RentalDate" type="date" asp-for="Form.RentalDate" />
+                        <span asp-validation-for="Form.RentalDate" class="text-danger"></span>
+                    </div>
+
+                    <div class="mb-3">
+                        <label class="form-label fw-bold" for="ExpectedReturnDate">
+                            Expected Return Date <span style="color: #EF4444;">*</span>
+                        </label>
+                        <input class="form-control" id="ExpectedReturnDate" type="date" asp-for="Form.ExpectedReturnDate" />
+                        <span asp-validation-for="Form.ExpectedReturnDate" class="text-danger"></span>
+                    </div>
+
+                    <div class="mb-3">
+                        <label class="form-label fw-bold" for="DepositAmount">Deposit Amount</label>
+                        <input class="form-control" id="DepositAmount" type="number" step="1000" min="0" asp-for="Form.DepositAmount" />
+                        <div class="form-text">Leave at 0 if no deposit is required.</div>
+                    </div>
+                </div>
+            </div>
+
+            <div class="mb-3">
+                <label class="form-label fw-bold" for="Notes">Notes</label>
+                <textarea class="form-control" id="Notes" rows="3" asp-for="Form.Notes"></textarea>
+            </div>
+
+            <hr />
+            <div class="d-flex gap-2">
+                <button type="submit" class="btn btn-primary">Create</button>
+                <a asp-page="Index" class="btn btn-outline-secondary">Cancel</a>
+            </div>
+        </form>
+    </div>
+</div>
+
+@section Scripts {
+    <partial name="_ValidationScriptsPartial" />
+    <script>
+        function updateDailyRate() {
+            var select = document.getElementById('MotorcycleId');
+            var option = select.options[select.selectedIndex];
+            var info = document.getElementById('motorcycleInfo');
+            if (option && option.value) {
+                document.getElementById('dailyRateDisplay').textContent = Number(option.dataset.dailyrate).toLocaleString();
+                document.getElementById('currentMileage').textContent = Number(option.dataset.mileage).toLocaleString();
+                info.style.display = 'block';
+            } else {
+                info.style.display = 'none';
+            }
+        }
+    </script>
+}

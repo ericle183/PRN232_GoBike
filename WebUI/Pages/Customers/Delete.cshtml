@@ -1,0 +1,41 @@
+@page
+@model WebUI.Pages.Customers.DeleteModel
+@{
+    ViewData["Title"] = "Customers / Delete";
+}
+
+<div class="d-flex justify-content-between align-items-center mb-4">
+    <h1 class="h4 mb-0">Delete Customer</h1>
+    <a asp-page="Index" class="btn btn-outline-secondary">Back</a>
+</div>
+
+@if (!string.IsNullOrEmpty(Model.ErrorMessage))
+{
+    <div class="alert alert-danger">@Model.ErrorMessage</div>
+}
+
+<div class="card border-danger">
+    <div class="card-header bg-danger text-white">
+        <h2 class="h6 mb-0">Confirm Deletion</h2>
+    </div>
+    <div class="card-body">
+        <p>Are you sure you want to delete <strong>@Model.Customer.FullName</strong>? This action cannot be undone.</p>
+
+        <dl class="row mb-0">
+            <dt class="col-sm-3 text-muted">CCCD</dt>
+            <dd class="col-sm-9">@Model.Customer.Cccd</dd>
+
+            <dt class="col-sm-3 text-muted">Phone</dt>
+            <dd class="col-sm-9">@Model.Customer.PhoneNumber</dd>
+
+            <dt class="col-sm-3 text-muted">Email</dt>
+            <dd class="col-sm-9">@Model.Customer.Email</dd>
+        </dl>
+    </div>
+    <div class="card-footer">
+        <form method="post">
+            <button type="submit" class="btn btn-danger">Delete</button>
+            <a asp-page="Index" class="btn btn-outline-secondary">Cancel</a>
+        </form>
+    </div>
+</div>

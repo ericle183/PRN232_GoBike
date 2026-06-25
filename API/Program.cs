@@ -1,6 +1,10 @@
 using BusinessObjects.Entities;
 using DataAccessObjects;
+using Microsoft.AspNetCore.OData;
+using Microsoft.AspNetCore.Authentication.Cookies;
 using Microsoft.EntityFrameworkCore;
+using Microsoft.OData.Edm;
+using Microsoft.OData.ModelBuilder;
 using Repositories;
 using Services;
 using Services.Interfaces;
@@ -10,7 +14,7 @@ var builder = WebApplication.CreateBuilder(args);
 var connectionString = builder.Configuration.GetConnectionString("DefaultConnection");
 if (string.IsNullOrWhiteSpace(connectionString))
 {
-    throw new InvalidOperationException("Connection string 'DefaultConnection' was not found. Please configure user secrets or appsettings.");
+    throw new InvalidOperationException("Connection string 'DefaultConnection' was not found.");
 }
 
 builder.Services.AddDbContext<AppDbContext>(options =>
@@ -27,8 +31,50 @@ builder.Services.AddScoped<IMotorcycleTypeService, MotorcycleTypeService>();
 builder.Services.AddScoped<IMotorcycleService, MotorcycleService>();
 builder.Services.AddScoped<ICustomerService, CustomerService>();
 builder.Services.AddScoped<IRentalContractService, RentalContractService>();
+builder.Services.AddScoped<IMaintenanceRecordService, MaintenanceRecordService>();
+builder.Services.AddScoped<IReportService, ReportService>();
 
-builder.Services.AddControllers();
+builder.Services.AddAuthentication(CookieAuthenticationDefaults.AuthenticationScheme)
+    .AddCookie(options =>
+    {
+        options.LoginPath = "/api/auth/login";
+        options.LogoutPath = "/api/auth/logout";
+        options.AccessDeniedPath = "/api/auth/access-denied";
+        options.ExpireTimeSpan = TimeSpan.FromHours(8);
+        options.SlidingExpiration = true;
+        options.Cookie.HttpOnly = true;
+        options.Cookie.SameSite = SameSiteMode.Lax;
+    });
+
+builder.Services.AddAuthorization(options =>
+{
+    options.AddPolicy("AdminOnly", policy => policy.RequireRole("Admin"));
+    options.AddPolicy("StaffOnly", policy => policy.RequireRole("Staff", "Admin"));
+    options.AddPolicy("AdminOrStaff", policy => policy.RequireRole("Admin", "Staff"));
+});
+
+IEdmModel GetEdmModel()
+{
+    var odataBuilder = new ODataConventionModelBuilder();
+    odataBuilder.EntitySet<Motorcycle>("Motorcycles");
+    return odataBuilder.GetEdmModel();
+}
+
+builder.Services.AddControllers()
+    .AddJsonOptions(options =>
+    {
+        options.JsonSerializerOptions.Converters.Add(
+            new System.Text.Json.Serialization.JsonStringEnumConverter());
+    })
+    .AddOData(options => options
+        .Select()
+        .Filter()
+        .OrderBy()
+        .Count()
+        .Expand()
+        .SetMaxTop(100)
+        .AddRouteComponents("odata", GetEdmModel()));
+
 builder.Services.AddEndpointsApiExplorer();
 builder.Services.AddOpenApi();
 
@@ -47,6 +93,7 @@ if (app.Environment.IsDevelopment())
 }
 
 app.UseHttpsRedirection();
+app.UseAuthentication();
 app.UseAuthorization();
 app.MapControllers();
 
