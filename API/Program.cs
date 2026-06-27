@@ -31,6 +31,8 @@ builder.Services.AddScoped<IMotorcycleTypeService, MotorcycleTypeService>();
 builder.Services.AddScoped<IMotorcycleService, MotorcycleService>();
 builder.Services.AddScoped<ICustomerService, CustomerService>();
 builder.Services.AddScoped<IRentalContractService, RentalContractService>();
+builder.Services.AddScoped<IMaintenanceRecordService, MaintenanceRecordService>();
+builder.Services.AddScoped<IReportService, ReportService>();
 
 builder.Services.AddAuthentication(CookieAuthenticationDefaults.AuthenticationScheme)
     .AddCookie(options =>
@@ -38,7 +40,7 @@ builder.Services.AddAuthentication(CookieAuthenticationDefaults.AuthenticationSc
         options.LoginPath = "/api/auth/login";
         options.LogoutPath = "/api/auth/logout";
         options.AccessDeniedPath = "/api/auth/access-denied";
-        options.ExpireTimeSpan = TimeSpan.FromHours(12);
+        options.ExpireTimeSpan = TimeSpan.FromHours(8);
         options.SlidingExpiration = true;
         options.Cookie.HttpOnly = true;
         options.Cookie.SameSite = SameSiteMode.Lax;

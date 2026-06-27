@@ -16,9 +16,6 @@ public class UpdateMotorcycleRequest
 
     public int? VehicleTypeId { get; set; }
 
-    [Range(1000, 10_000_000, ErrorMessage = "Daily rate must be between 1,000 and 10,000,000 VND")]
-    public decimal? DailyRate { get; set; }
-
     [MaxLength(30)]
     public string? Color { get; set; }
 

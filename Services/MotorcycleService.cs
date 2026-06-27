@@ -64,9 +64,15 @@ public class MotorcycleService : IMotorcycleService
         if (await _motorcycleRepo.ExistsByLicensePlateAsync(request.LicensePlate))
             throw new InvalidOperationException("License plate already exists in the system.");
 
+        var registrationNo = string.IsNullOrWhiteSpace(request.RegistrationNo)
+            ? null
+            : request.RegistrationNo.Trim();
+        if (registrationNo != null && await _motorcycleRepo.ExistsByRegistrationNoAsync(registrationNo))
+            throw new InvalidOperationException("Registration number already exists in the system.");
+
         var type = await _typeRepo.GetByIdAsync(request.VehicleTypeId);
-        if (type == null)
-            throw new InvalidOperationException("Vehicle type not found.");
+        if (type == null || !type.IsActive)
+            throw new InvalidOperationException("Vehicle type not found or inactive.");
 
         var motorcycle = new Motorcycle
         {
@@ -74,10 +80,9 @@ public class MotorcycleService : IMotorcycleService
             Brand = request.Brand.Trim(),
             Model = request.Model.Trim(),
             VehicleTypeId = request.VehicleTypeId,
-            DailyRate = request.DailyRate,
             Color = request.Color.Trim(),
             Mileage = request.Mileage,
-            RegistrationNo = request.RegistrationNo?.Trim(),
+            RegistrationNo = registrationNo,
             Status = MotorcycleStatus.Available,
             IsActive = true,
             CreatedAt = DateTime.UtcNow
@@ -111,17 +116,24 @@ public class MotorcycleService : IMotorcycleService
             if (request.VehicleTypeId.HasValue)
             {
                 var type = await _typeRepo.GetByIdAsync(request.VehicleTypeId.Value);
-                if (type == null)
-                    throw new InvalidOperationException("Vehicle type not found.");
+                if (type == null || !type.IsActive)
+                    throw new InvalidOperationException("Vehicle type not found or inactive.");
                 motorcycle.VehicleTypeId = request.VehicleTypeId.Value;
             }
-            if (request.DailyRate.HasValue) motorcycle.DailyRate = request.DailyRate.Value;
-            if (request.RegistrationNo != null) motorcycle.RegistrationNo = request.RegistrationNo.Trim();
+            if (request.RegistrationNo != null)
+            {
+                var registrationNo = string.IsNullOrWhiteSpace(request.RegistrationNo)
+                    ? null
+                    : request.RegistrationNo.Trim();
+                if (registrationNo != null && await _motorcycleRepo.ExistsByRegistrationNoAsync(registrationNo, id))
+                    throw new InvalidOperationException("Registration number already exists in the system.");
+                motorcycle.RegistrationNo = registrationNo;
+            }
         }
         else
         {
             if (request.LicensePlate != null || request.Brand != null || request.Model != null ||
-                request.VehicleTypeId != null || request.DailyRate != null)
+                request.VehicleTypeId != null)
                 throw new UnauthorizedAccessException("Staff can only edit Color and Mileage.");
         }
 
@@ -141,7 +153,7 @@ public class MotorcycleService : IMotorcycleService
             throw new KeyNotFoundException($"Motorcycle with ID {id} not found.");
 
         if (await _motorcycleRepo.HasActiveRentalsAsync(id))
-            throw new InvalidOperationException("Cannot delete motorcycle with active or pending rentals.");
+            throw new InvalidOperationException("Cannot deactivate motorcycle with active or reserved rentals.");
 
         motorcycle.IsActive = false;
         motorcycle.UpdatedAt = DateTime.UtcNow;
@@ -179,7 +191,7 @@ public class MotorcycleService : IMotorcycleService
         VehicleTypeId = m.VehicleTypeId,
         VehicleTypeName = m.VehicleType?.Name ?? "",
         Status = m.Status,
-        DailyRate = m.DailyRate,
+        DailyRate = m.VehicleType?.DefaultDailyRate ?? 0,
         Color = m.Color,
         Mileage = m.Mileage,
         RegistrationNo = m.RegistrationNo,
@@ -196,7 +208,7 @@ public class MotorcycleService : IMotorcycleService
         VehicleTypeId = m.VehicleTypeId,
         VehicleTypeName = m.VehicleType?.Name ?? "",
         Status = m.Status,
-        DailyRate = m.DailyRate,
+        DailyRate = m.VehicleType?.DefaultDailyRate ?? 0,
         Color = m.Color,
         Mileage = m.Mileage,
         RegistrationNo = m.RegistrationNo,

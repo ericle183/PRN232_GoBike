@@ -14,6 +14,9 @@ public class AppDbContext : DbContext
     public DbSet<Motorcycle> Motorcycles => Set<Motorcycle>();
     public DbSet<Customer> Customers => Set<Customer>();
     public DbSet<RentalContract> RentalContracts => Set<RentalContract>();
+    public DbSet<RentalInspection> RentalInspections => Set<RentalInspection>();
+    public DbSet<RentalPayment> RentalPayments => Set<RentalPayment>();
+    public DbSet<MaintenanceRecord> MaintenanceRecords => Set<MaintenanceRecord>();
 
     protected override void OnModelCreating(ModelBuilder modelBuilder)
     {
@@ -21,22 +24,53 @@ public class AppDbContext : DbContext
 
         // Unique indexes
         modelBuilder.Entity<User>().HasIndex(u => u.Username).IsUnique();
+        modelBuilder.Entity<MotorcycleType>().HasIndex(m => m.Name).IsUnique();
         modelBuilder.Entity<Motorcycle>().HasIndex(m => m.LicensePlate).IsUnique();
+        modelBuilder.Entity<Motorcycle>().HasIndex(m => m.RegistrationNo).IsUnique().HasFilter("[RegistrationNo] IS NOT NULL");
         modelBuilder.Entity<Customer>().HasIndex(c => c.CCCD).IsUnique();
+        modelBuilder.Entity<Customer>().HasIndex(c => c.DriverLicenseNo).IsUnique();
+        modelBuilder.Entity<RentalInspection>().HasIndex(i => new { i.RentalContractId, i.InspectionType }).IsUnique();
 
         // Decimal precision
         modelBuilder.Entity<MotorcycleType>().Property(m => m.DefaultDailyRate).HasPrecision(18, 2);
-        modelBuilder.Entity<Motorcycle>().Property(m => m.DailyRate).HasPrecision(18, 2);
-        modelBuilder.Entity<RentalContract>().Property(r => r.DailyRate).HasPrecision(18, 2);
+        modelBuilder.Entity<MotorcycleType>().Property(m => m.DefaultDepositAmount).HasPrecision(18, 2);
+        modelBuilder.Entity<RentalContract>().Property(r => r.DailyPrice).HasPrecision(18, 2);
         modelBuilder.Entity<RentalContract>().Property(r => r.TotalAmount).HasPrecision(18, 2);
         modelBuilder.Entity<RentalContract>().Property(r => r.DepositAmount).HasPrecision(18, 2);
+        modelBuilder.Entity<RentalContract>().Property(r => r.LateFee).HasPrecision(18, 2);
+        modelBuilder.Entity<RentalContract>().Property(r => r.DamageFee).HasPrecision(18, 2);
+        modelBuilder.Entity<RentalContract>().Property(r => r.OtherFee).HasPrecision(18, 2);
+        modelBuilder.Entity<RentalContract>().Property(r => r.DiscountAmount).HasPrecision(18, 2);
         modelBuilder.Entity<RentalContract>().Property(r => r.FinalAmount).HasPrecision(18, 2);
+        modelBuilder.Entity<RentalContract>().Property(r => r.RemainingAmount).HasPrecision(18, 2);
+        modelBuilder.Entity<RentalContract>().Property(r => r.AdditionalPaymentAmount).HasPrecision(18, 2);
+        modelBuilder.Entity<RentalContract>().Property(r => r.RefundAmount).HasPrecision(18, 2);
+        modelBuilder.Entity<RentalContract>().Property(r => r.CancellationFee).HasPrecision(18, 2);
+        modelBuilder.Entity<RentalPayment>().Property(p => p.Amount).HasPrecision(18, 2);
+        modelBuilder.Entity<MaintenanceRecord>().Property(m => m.RepairCost).HasPrecision(18, 2);
 
-        // Soft delete query filters
-        modelBuilder.Entity<User>().HasQueryFilter(u => u.IsActive);
-        modelBuilder.Entity<MotorcycleType>().HasQueryFilter(m => m.IsActive);
-        modelBuilder.Entity<Motorcycle>().HasQueryFilter(m => m.IsActive);
-        modelBuilder.Entity<Customer>().HasQueryFilter(c => c.IsActive);
-        modelBuilder.Entity<RentalContract>().HasQueryFilter(r => r.IsActive);
+        modelBuilder.Entity<RentalInspection>()
+            .HasOne(i => i.RentalContract)
+            .WithMany(c => c.Inspections)
+            .HasForeignKey(i => i.RentalContractId)
+            .OnDelete(DeleteBehavior.Restrict);
+
+        modelBuilder.Entity<RentalPayment>()
+            .HasOne(p => p.RentalContract)
+            .WithMany(c => c.Payments)
+            .HasForeignKey(p => p.RentalContractId)
+            .OnDelete(DeleteBehavior.Restrict);
+
+        modelBuilder.Entity<MaintenanceRecord>()
+            .HasOne(m => m.Motorcycle)
+            .WithMany(v => v.MaintenanceRecords)
+            .HasForeignKey(m => m.MotorcycleId)
+            .OnDelete(DeleteBehavior.Restrict);
+
+        modelBuilder.Entity<MaintenanceRecord>()
+            .HasOne(m => m.RentalContract)
+            .WithMany(c => c.MaintenanceRecords)
+            .HasForeignKey(m => m.RentalContractId)
+            .OnDelete(DeleteBehavior.SetNull);
     }
 }

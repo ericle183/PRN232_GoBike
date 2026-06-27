@@ -20,10 +20,6 @@ public class CreateMotorcycleRequest
     [Required(ErrorMessage = "Vehicle type is required")]
     public int VehicleTypeId { get; set; }
 
-    [Required(ErrorMessage = "Daily rate is required")]
-    [Range(1000, 10_000_000, ErrorMessage = "Daily rate must be between 1,000 and 10,000,000 VND")]
-    public decimal DailyRate { get; set; }
-
     [Required(ErrorMessage = "Color is required")]
     [MaxLength(30)]
     public string Color { get; set; } = string.Empty;

@@ -7,12 +7,10 @@ namespace Services;
 public class CustomerService : ICustomerService
 {
     private readonly ICustomerRepository customerRepository;
-    private readonly IRentalContractRepository rentalContractRepository;
 
-    public CustomerService(ICustomerRepository customerRepository, IRentalContractRepository rentalContractRepository)
+    public CustomerService(ICustomerRepository customerRepository)
     {
         this.customerRepository = customerRepository;
-        this.rentalContractRepository = rentalContractRepository;
     }
 
     public Task<List<Customer>> GetAllAsync()
@@ -30,6 +28,11 @@ public class CustomerService : ICustomerService
             throw new InvalidOperationException("CCCD already exists in the system");
         }
 
+        if (await customerRepository.ExistsByDriverLicenseNoAsync(customer.DriverLicenseNo))
+        {
+            throw new InvalidOperationException("Driver license number already exists in the system");
+        }
+
         await customerRepository.AddAsync(customer);
     }
 
@@ -42,22 +45,34 @@ public class CustomerService : ICustomerService
             throw new InvalidOperationException("CCCD already exists in the system");
         }
 
+        if (await customerRepository.ExistsByDriverLicenseNoAsync(customer.DriverLicenseNo, customer.Id))
+        {
+            throw new InvalidOperationException("Driver license number already exists in the system");
+        }
+
         customer.UpdatedAt = DateTime.UtcNow;
         customerRepository.Update(customer);
     }
 
     public async Task DeleteAsync(int id)
+        => await DeactivateAsync(id);
+
+    public async Task DeactivateAsync(int id)
     {
         var customer = await customerRepository.GetByIdAsync(id)
             ?? throw new InvalidOperationException($"Customer with ID {id} not found");
 
-        var rentals = await rentalContractRepository.GetByCustomerIdAsync(id);
-        if (rentals.Count > 0)
-        {
-            throw new InvalidOperationException("Cannot delete customer who has rental history");
-        }
-
         customer.IsActive = false;
+        customer.UpdatedAt = DateTime.UtcNow;
+        customerRepository.Update(customer);
+    }
+
+    public async Task ReactivateAsync(int id)
+    {
+        var customer = await customerRepository.GetByIdAsync(id)
+            ?? throw new InvalidOperationException($"Customer with ID {id} not found");
+
+        customer.IsActive = true;
         customer.UpdatedAt = DateTime.UtcNow;
         customerRepository.Update(customer);
     }
@@ -77,6 +92,11 @@ public class CustomerService : ICustomerService
         if (string.IsNullOrWhiteSpace(customer.PhoneNumber) || !System.Text.RegularExpressions.Regex.IsMatch(customer.PhoneNumber, @"^0[0-9]{9,10}$"))
         {
             throw new InvalidOperationException("Invalid Vietnamese phone format");
+        }
+
+        if (string.IsNullOrWhiteSpace(customer.DriverLicenseNo))
+        {
+            throw new InvalidOperationException("DriverLicenseNo is required");
         }
 
         var age = DateTime.Today.Year - customer.DateOfBirth.Year -

@@ -37,9 +37,9 @@ public static class DBSeeder
         // --- 2. MotorcycleTypes ---
         var types = new List<MotorcycleType>
         {
-            new() { Name = "Xe số",            Description = "Xe máy số tự động",                          DefaultDailyRate = 100_000m, IsActive = true },
-            new() { Name = "Xe tay ga",         Description = "Xe tay ga automatic",                          DefaultDailyRate = 150_000m, IsActive = true },
-            new() { Name = "Xe phân khối lớn",Description = "Xe phân khối lớn từ 150cc trở lên",           DefaultDailyRate = 250_000m, IsActive = true },
+            new() { Name = "Xe số", Description = "Xe máy số tự động", DefaultDailyRate = 100_000m, DefaultDepositAmount = 500_000m, IsActive = true },
+            new() { Name = "Xe tay ga", Description = "Xe tay ga automatic", DefaultDailyRate = 150_000m, DefaultDepositAmount = 800_000m, IsActive = true },
+            new() { Name = "Xe phân khối lớn", Description = "Xe phân khối lớn từ 150cc trở lên", DefaultDailyRate = 250_000m, DefaultDepositAmount = 1_000_000m, IsActive = true },
         };
         await context.MotorcycleTypes.AddRangeAsync(types);
         await context.SaveChangesAsync();
@@ -47,16 +47,16 @@ public static class DBSeeder
         // --- 3. Motorcycles (10 sample) ---
         var motorcycles = new List<Motorcycle>
         {
-            new() { LicensePlate = "51A-12345", Brand = "Honda",     Model = "Wave RSX",  VehicleTypeId = 1, Status = BusinessObjects.Enums.MotorcycleStatus.Available,   DailyRate = 100_000m, Color = "Đen",   Mileage = 12000, RegistrationNo = "REG-001", IsActive = true, CreatedAt = new DateTime(2026, 6, 1) },
-            new() { LicensePlate = "51B-23456", Brand = "Yamaha",    Model = "Exciter",   VehicleTypeId = 1, Status = BusinessObjects.Enums.MotorcycleStatus.Available,   DailyRate = 120_000m, Color = "Đỏ",    Mileage = 8500,  RegistrationNo = "REG-002", IsActive = true, CreatedAt = new DateTime(2026, 6, 1) },
-            new() { LicensePlate = "29C-34567", Brand = "Suzuki",    Model = "Raider",    VehicleTypeId = 1, Status = BusinessObjects.Enums.MotorcycleStatus.Rented,       DailyRate = 110_000m, Color = "Xanh",  Mileage = 15000, RegistrationNo = "REG-003", IsActive = true, CreatedAt = new DateTime(2026, 6, 1) },
-            new() { LicensePlate = "48D-45678", Brand = "Honda",     Model = "Future",    VehicleTypeId = 1, Status = BusinessObjects.Enums.MotorcycleStatus.Available,   DailyRate = 100_000m, Color = "Trắng", Mileage = 5000,  RegistrationNo = "REG-004", IsActive = true, CreatedAt = new DateTime(2026, 6, 1) },
-            new() { LicensePlate = "51E-56789", Brand = "Honda",     Model = "Lead",      VehicleTypeId = 2, Status = BusinessObjects.Enums.MotorcycleStatus.Available,   DailyRate = 150_000m, Color = "Bạc",   Mileage = 7200,  RegistrationNo = "REG-005", IsActive = true, CreatedAt = new DateTime(2026, 6, 1) },
-            new() { LicensePlate = "16F-67890", Brand = "Yamaha",    Model = "Nouvo",     VehicleTypeId = 2, Status = BusinessObjects.Enums.MotorcycleStatus.Maintenance, DailyRate = 140_000m, Color = "Đen",   Mileage = 22000, RegistrationNo = "REG-006", IsActive = true, CreatedAt = new DateTime(2026, 6, 1) },
-            new() { LicensePlate = "30G-78901", Brand = "Piaggio",   Model = "Liberty",   VehicleTypeId = 2, Status = BusinessObjects.Enums.MotorcycleStatus.Available,   DailyRate = 160_000m, Color = "Xám",   Mileage = 4300,  RegistrationNo = "REG-007", IsActive = true, CreatedAt = new DateTime(2026, 6, 1) },
-            new() { LicensePlate = "59H-89012", Brand = "Honda",     Model = "PCX",       VehicleTypeId = 2, Status = BusinessObjects.Enums.MotorcycleStatus.Reserved,    DailyRate = 180_000m, Color = "Đỏ",    Mileage = 3100,  RegistrationNo = "REG-008", IsActive = true, CreatedAt = new DateTime(2026, 6, 1) },
-            new() { LicensePlate = "51K-90123", Brand = "Yamaha",    Model = "MT-03",     VehicleTypeId = 3, Status = BusinessObjects.Enums.MotorcycleStatus.Available,   DailyRate = 300_000m, Color = "Xám",   Mileage = 2500,  RegistrationNo = "REG-009", IsActive = true, CreatedAt = new DateTime(2026, 6, 1) },
-            new() { LicensePlate = "47L-01234", Brand = "Kawasaki",  Model = "Z125",      VehicleTypeId = 3, Status = BusinessObjects.Enums.MotorcycleStatus.Available,   DailyRate = 350_000m, Color = "Xanh",  Mileage = 1800,  RegistrationNo = "REG-010", IsActive = true, CreatedAt = new DateTime(2026, 6, 1) },
+            new() { LicensePlate = "51A-12345", Brand = "Honda", Model = "Wave RSX", VehicleTypeId = 1, Status = BusinessObjects.Enums.MotorcycleStatus.Available, Color = "Đen", Mileage = 12000, RegistrationNo = "REG-001", IsActive = true, CreatedAt = new DateTime(2026, 6, 1) },
+            new() { LicensePlate = "51B-23456", Brand = "Yamaha", Model = "Exciter", VehicleTypeId = 1, Status = BusinessObjects.Enums.MotorcycleStatus.Available, Color = "Đỏ", Mileage = 8500, RegistrationNo = "REG-002", IsActive = true, CreatedAt = new DateTime(2026, 6, 1) },
+            new() { LicensePlate = "29C-34567", Brand = "Suzuki", Model = "Raider", VehicleTypeId = 1, Status = BusinessObjects.Enums.MotorcycleStatus.Rented, Color = "Xanh", Mileage = 15000, RegistrationNo = "REG-003", IsActive = true, CreatedAt = new DateTime(2026, 6, 1) },
+            new() { LicensePlate = "48D-45678", Brand = "Honda", Model = "Future", VehicleTypeId = 1, Status = BusinessObjects.Enums.MotorcycleStatus.Available, Color = "Trắng", Mileage = 5000, RegistrationNo = "REG-004", IsActive = true, CreatedAt = new DateTime(2026, 6, 1) },
+            new() { LicensePlate = "51E-56789", Brand = "Honda", Model = "Lead", VehicleTypeId = 2, Status = BusinessObjects.Enums.MotorcycleStatus.Available, Color = "Bạc", Mileage = 7200, RegistrationNo = "REG-005", IsActive = true, CreatedAt = new DateTime(2026, 6, 1) },
+            new() { LicensePlate = "16F-67890", Brand = "Yamaha", Model = "Nouvo", VehicleTypeId = 2, Status = BusinessObjects.Enums.MotorcycleStatus.Maintenance, Color = "Đen", Mileage = 22000, RegistrationNo = "REG-006", IsActive = true, CreatedAt = new DateTime(2026, 6, 1) },
+            new() { LicensePlate = "30G-78901", Brand = "Piaggio", Model = "Liberty", VehicleTypeId = 2, Status = BusinessObjects.Enums.MotorcycleStatus.Available, Color = "Xám", Mileage = 4300, RegistrationNo = "REG-007", IsActive = true, CreatedAt = new DateTime(2026, 6, 1) },
+            new() { LicensePlate = "59H-89012", Brand = "Honda", Model = "PCX", VehicleTypeId = 2, Status = BusinessObjects.Enums.MotorcycleStatus.Reserved, Color = "Đỏ", Mileage = 3100, RegistrationNo = "REG-008", IsActive = true, CreatedAt = new DateTime(2026, 6, 1) },
+            new() { LicensePlate = "51K-90123", Brand = "Yamaha", Model = "MT-03", VehicleTypeId = 3, Status = BusinessObjects.Enums.MotorcycleStatus.Available, Color = "Xám", Mileage = 2500, RegistrationNo = "REG-009", IsActive = true, CreatedAt = new DateTime(2026, 6, 1) },
+            new() { LicensePlate = "47L-01234", Brand = "Kawasaki", Model = "Z125", VehicleTypeId = 3, Status = BusinessObjects.Enums.MotorcycleStatus.Available, Color = "Xanh", Mileage = 1800, RegistrationNo = "REG-010", IsActive = true, CreatedAt = new DateTime(2026, 6, 1) },
         };
         await context.Motorcycles.AddRangeAsync(motorcycles);
         await context.SaveChangesAsync();
@@ -111,7 +111,7 @@ public static class DBSeeder
                 RentalDate = new DateTime(2026, 6, 3, 8, 0, 0, DateTimeKind.Utc),
                 ExpectedReturnDate = new DateTime(2026, 6, 6, 20, 0, 0, DateTimeKind.Utc),
                 DailyRate = 180_000m, TotalAmount = 540_000m, DepositAmount = 400_000m, FinalAmount = 0,
-                Status = BusinessObjects.Enums.RentalStatus.Pending,
+                Status = BusinessObjects.Enums.RentalStatus.Reserved,
                 Notes = "Booking trước 1 tuần", CreatedBy = "staff",
                 IsActive = true, CreatedAt = new DateTime(2026, 5, 30)
             },

@@ -18,7 +18,14 @@ public class MotorcycleType
     [Column(TypeName = "decimal(18,2)")]
     public decimal DefaultDailyRate { get; set; }
 
+    [Column(TypeName = "decimal(18,2)")]
+    public decimal DefaultDepositAmount { get; set; }
+
     public bool IsActive { get; set; } = true;
+
+    public DateTime CreatedAt { get; set; } = DateTime.UtcNow;
+
+    public DateTime? UpdatedAt { get; set; }
 
     public ICollection<Motorcycle> Motorcycles { get; set; } = new List<Motorcycle>();
 }

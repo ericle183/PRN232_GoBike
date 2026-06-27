@@ -13,11 +13,18 @@ public class MotorcycleRepository : Repository<Motorcycle>, IMotorcycleRepositor
 
     public Task<List<Motorcycle>> GetAvailableAsync()
         => dbSet.Include(m => m.VehicleType)
-                .Where(x => x.Status == MotorcycleStatus.Available)
+                .Where(x => x.IsActive
+                            && x.VehicleType != null
+                            && x.VehicleType.IsActive
+                            && x.Status == MotorcycleStatus.Available)
                 .ToListAsync();
 
     public Task<bool> ExistsByLicensePlateAsync(string licensePlate, int? excludeId = null)
         => dbSet.AnyAsync(x => x.LicensePlate == licensePlate
+                            && (!excludeId.HasValue || x.Id != excludeId.Value));
+
+    public Task<bool> ExistsByRegistrationNoAsync(string registrationNo, int? excludeId = null)
+        => dbSet.AnyAsync(x => x.RegistrationNo == registrationNo
                             && (!excludeId.HasValue || x.Id != excludeId.Value));
 
     public async Task<(List<Motorcycle> Items, int TotalCount)> SearchAsync(
@@ -43,10 +50,10 @@ public class MotorcycleRepository : Repository<Motorcycle>, IMotorcycleRepositor
             query = query.Where(m => m.Status == status.Value);
 
         if (minPrice.HasValue)
-            query = query.Where(m => m.DailyRate >= minPrice.Value);
+            query = query.Where(m => m.VehicleType != null && m.VehicleType.DefaultDailyRate >= minPrice.Value);
 
         if (maxPrice.HasValue)
-            query = query.Where(m => m.DailyRate <= maxPrice.Value);
+            query = query.Where(m => m.VehicleType != null && m.VehicleType.DefaultDailyRate <= maxPrice.Value);
 
         var totalCount = await query.CountAsync();
 
@@ -68,5 +75,5 @@ public class MotorcycleRepository : Repository<Motorcycle>, IMotorcycleRepositor
     public Task<bool> HasActiveRentalsAsync(int motorcycleId)
         => context.RentalContracts.AnyAsync(r =>
             r.MotorcycleId == motorcycleId &&
-            (r.Status == RentalStatus.Active || r.Status == RentalStatus.Pending));
+            (r.Status == RentalStatus.Active || r.Status == RentalStatus.Reserved));
 }
