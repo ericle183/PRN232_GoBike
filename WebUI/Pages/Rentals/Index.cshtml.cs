@@ -73,7 +73,7 @@ public class IndexModel : PageModel
         if (FilterFromDate.HasValue) queryParams.Add($"fromDate={FilterFromDate:yyyy-MM-dd}");
         if (FilterToDate.HasValue) queryParams.Add($"toDate={FilterToDate:yyyy-MM-dd}");
 
-        var url = "/api/rentalcontract" + (queryParams.Any() ? "?" + string.Join("&", queryParams) : "");
+        var url = "/api/rental-contracts" + (queryParams.Any() ? "?" + string.Join("&", queryParams) : "");
         var rentalRes = await client.GetAsync(url);
 
         if (rentalRes.IsSuccessStatusCode)
@@ -100,6 +100,7 @@ public class IndexModel : PageModel
         2 => "Active",
         3 => "Completed",
         4 => "Cancelled",
+        5 => "NoShow",
         _ => "Unknown"
     };
 }

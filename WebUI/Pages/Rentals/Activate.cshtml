@@ -4,8 +4,12 @@
     ViewData["Title"] = "Rentals / Activate";
 }
 
-<div class="d-flex justify-content-between align-items-center mb-4">
-    <h1 class="h4 mb-0">Activate Rental</h1>
+<div class="page-heading">
+    <div>
+        <div class="page-kicker">Rental handover</div>
+        <h1>Activate Rental</h1>
+        <p class="page-subtitle">Record the motorcycle condition before handing it over to the customer.</p>
+    </div>
     <a asp-page="Details" asp-route-id="@Model.Rental.Id" class="btn btn-outline-secondary">Back</a>
 </div>
 
@@ -14,10 +18,7 @@
     <div class="alert alert-danger">@Model.ErrorMessage</div>
 }
 
-<div class="card">
-    <div class="card-header bg-success text-white">
-        <h2 class="h6 mb-0">Confirm Activation</h2>
-    </div>
+<div class="content-card">
     <div class="card-body">
         <dl class="row mb-3">
             <dt class="col-sm-4 text-muted">Motorcycle</dt>
@@ -28,12 +29,96 @@
         </dl>
 
         <form method="post">
-            <div class="mb-3">
-                <label class="form-label fw-bold" for="StartMileage">
-                    Start Mileage (km) <span style="color: #EF4444;">*</span>
+            <div class="row">
+                <div class="col-md-4">
+                    <div class="mb-3">
+                        <label class="form-label fw-bold" for="DepositPaymentMethod">
+                            Deposit Payment Method <span style="color: #EF4444;">*</span>
+                        </label>
+                        <select class="form-select" id="DepositPaymentMethod" asp-for="DepositPaymentMethod">
+                            <option value="1">Cash</option>
+                            <option value="2">Bank Transfer</option>
+                        </select>
+                    </div>
+                </div>
+                <div class="col-md-8">
+                    <div class="mb-3">
+                        <label class="form-label fw-bold" for="DepositPaymentNote">Deposit Payment Note</label>
+                        <input class="form-control" id="DepositPaymentNote" asp-for="DepositPaymentNote"
+                               placeholder="Receipt code, transfer note..." />
+                    </div>
+                </div>
+            </div>
+
+            <div class="form-check mb-4">
+                <input class="form-check-input" id="DepositConfirmed" asp-for="DepositConfirmed" />
+                <label class="form-check-label fw-bold" for="DepositConfirmed">
+                    Deposit has been received <span style="color: #EF4444;">*</span>
                 </label>
-                <input class="form-control" id="StartMileage" type="number" min="0" asp-for="StartMileage" />
-                <span asp-validation-for="StartMileage" class="text-danger"></span>
+                <div class="form-text">Only Admin should check this after confirming the customer deposit.</div>
+                <span asp-validation-for="DepositConfirmed" class="text-danger"></span>
+            </div>
+
+            <div class="row">
+                <div class="col-md-4">
+                    <div class="mb-3">
+                        <label class="form-label fw-bold" for="StartMileage">
+                            Start Mileage (km) <span style="color: #EF4444;">*</span>
+                        </label>
+                        <input class="form-control" id="StartMileage" type="number" min="0" asp-for="StartMileage" />
+                        <span asp-validation-for="StartMileage" class="text-danger"></span>
+                    </div>
+                </div>
+                <div class="col-md-4">
+                    <div class="mb-3">
+                        <label class="form-label fw-bold" for="FuelLevel">
+                            Fuel Level <span style="color: #EF4444;">*</span>
+                        </label>
+                        <select class="form-select" id="FuelLevel" asp-for="FuelLevel">
+                            <option value="Full">Full</option>
+                            <option value="3/4">3/4</option>
+                            <option value="1/2">1/2</option>
+                            <option value="1/4">1/4</option>
+                            <option value="Empty">Empty</option>
+                        </select>
+                        <span asp-validation-for="FuelLevel" class="text-danger"></span>
+                    </div>
+                </div>
+                <div class="col-md-4">
+                    <div class="mb-3">
+                        <label class="form-label fw-bold" for="VehicleCondition">
+                            Vehicle Condition <span style="color: #EF4444;">*</span>
+                        </label>
+                        <input class="form-control" id="VehicleCondition" asp-for="VehicleCondition" />
+                        <span asp-validation-for="VehicleCondition" class="text-danger"></span>
+                    </div>
+                </div>
+            </div>
+
+            <div class="form-check mb-3">
+                <input class="form-check-input" id="HasDamage" asp-for="HasDamage" />
+                <label class="form-check-label fw-bold" for="HasDamage">Damage found before handover</label>
+            </div>
+
+            <div class="row">
+                <div class="col-md-6">
+                    <div class="mb-3">
+                        <label class="form-label fw-bold" for="DamageDescription">Damage Description</label>
+                        <textarea class="form-control" id="DamageDescription" rows="3" asp-for="DamageDescription"></textarea>
+                        <span asp-validation-for="DamageDescription" class="text-danger"></span>
+                    </div>
+                </div>
+                <div class="col-md-6">
+                    <div class="mb-3">
+                        <label class="form-label fw-bold" for="AccessoriesNote">Accessories Note</label>
+                        <textarea class="form-control" id="AccessoriesNote" rows="3" asp-for="AccessoriesNote"></textarea>
+                    </div>
+                </div>
+            </div>
+
+            <div class="mb-3">
+                <label class="form-label fw-bold" for="InspectionNote">Inspection Note</label>
+                <textarea class="form-control" id="InspectionNote" rows="2" asp-for="InspectionNote"></textarea>
             </div>
 
             <div class="d-flex gap-2">

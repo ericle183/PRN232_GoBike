@@ -8,7 +8,7 @@ using Microsoft.AspNetCore.Mvc.RazorPages;
 
 namespace WebUI.Pages.Rentals;
 
-[Authorize(Roles = "Admin")]
+[Authorize(Roles = "Admin,Staff")]
 public class CreateModel : PageModel
 {
     private readonly IHttpClientFactory _httpClientFactory;
@@ -57,9 +57,21 @@ public class CreateModel : PageModel
             return await OnGetAsync();
         }
 
-        if (Form.ExpectedReturnDate <= Form.RentalDate)
+        if (Form.CustomerId <= 0)
         {
-            ModelState.AddModelError("Form.ExpectedReturnDate", "Expected return date must be after rental date.");
+            ModelState.AddModelError("Form.CustomerId", "Customer is required.");
+            return await OnGetAsync();
+        }
+
+        if (Form.MotorcycleId <= 0)
+        {
+            ModelState.AddModelError("Form.MotorcycleId", "Motorcycle is required.");
+            return await OnGetAsync();
+        }
+
+        if (Form.ExpectedReturnDate < Form.RentalDate)
+        {
+            ModelState.AddModelError("Form.ExpectedReturnDate", "Expected return date must be on or after rental date.");
             return await OnGetAsync();
         }
 
@@ -67,19 +79,17 @@ public class CreateModel : PageModel
         {
             customerId = Form.CustomerId,
             motorcycleId = Form.MotorcycleId,
-            rentalDate = Form.RentalDate.ToString("yyyy-MM-dd"),
-            expectedReturnDate = Form.ExpectedReturnDate.ToString("yyyy-MM-dd"),
-            depositAmount = Form.DepositAmount,
-            notes = Form.Notes,
-            createdBy = "Admin"
+            startDate = Form.RentalDate.ToString("yyyy-MM-dd"),
+            endDate = Form.ExpectedReturnDate.ToString("yyyy-MM-dd"),
+            notes = Form.Notes
         };
 
         var client = _httpClientFactory.CreateClient("GobikeApi");
-        var response = await client.PostAsJsonAsync("/api/rentalcontract", payload);
+        var response = await client.PostAsJsonAsync("/api/rental-contracts/reserve", payload);
 
         if (!response.IsSuccessStatusCode)
         {
-            ModelState.AddModelError(string.Empty, "Failed to create rental contract. Please try again.");
+            ModelState.AddModelError(string.Empty, await ReadErrorMessageAsync(response));
             return await OnGetAsync();
         }
 
@@ -87,7 +97,34 @@ public class CreateModel : PageModel
         var created = JsonSerializer.Deserialize<RentalCreatedResult>(resultJson,
             new JsonSerializerOptions { PropertyNameCaseInsensitive = true });
 
-        TempData?["SuccessMessage"] = "Rental contract created successfully.";
+        TempData?["SuccessMessage"] = "Rental reservation created successfully. Admin can confirm the deposit and activate it on the rental date.";
         return RedirectToPage("./Details", new { id = created?.Id ?? 0 });
+    }
+
+    private static async Task<string> ReadErrorMessageAsync(HttpResponseMessage response)
+    {
+        var fallback = "Failed to create rental contract. Please try again.";
+        var json = await response.Content.ReadAsStringAsync();
+        if (string.IsNullOrWhiteSpace(json))
+            return fallback;
+
+        try
+        {
+            using var document = JsonDocument.Parse(json);
+            if (document.RootElement.TryGetProperty("message", out var message))
+                return message.GetString() ?? fallback;
+
+            if (document.RootElement.TryGetProperty("title", out var title))
+                return title.GetString() ?? fallback;
+
+            if (document.RootElement.TryGetProperty("errors", out var errors))
+                return errors.ToString();
+        }
+        catch (JsonException)
+        {
+            return json;
+        }
+
+        return fallback;
     }
 }

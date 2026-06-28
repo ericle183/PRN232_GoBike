@@ -18,7 +18,7 @@ public class DetailsModel : PageModel
     public async Task<IActionResult> OnGetAsync(int id)
     {
         var client = _httpClientFactory.CreateClient("GobikeApi");
-        var response = await client.GetAsync($"/api/rentalcontract/{id}");
+        var response = await client.GetAsync($"/api/rental-contracts/{id}");
 
         if (!response.IsSuccessStatusCode)
         {
@@ -47,6 +47,7 @@ public class DetailsModel : PageModel
         2 => "Active",
         3 => "Completed",
         4 => "Cancelled",
+        5 => "NoShow",
         _ => "Unknown"
     };
 }

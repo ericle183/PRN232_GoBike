@@ -1,3 +1,4 @@
+using System.Net.Http.Json;
 using System.Text.Json;
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
@@ -21,16 +22,41 @@ public class ActivateModel : PageModel
     [BindProperty]
     public int StartMileage { get; set; }
 
+    [BindProperty]
+    public string FuelLevel { get; set; } = "Full";
+
+    [BindProperty]
+    public string VehicleCondition { get; set; } = "Good";
+
+    [BindProperty]
+    public bool HasDamage { get; set; }
+
+    [BindProperty]
+    public string? DamageDescription { get; set; }
+
+    [BindProperty]
+    public string? AccessoriesNote { get; set; }
+
+    [BindProperty]
+    public string? InspectionNote { get; set; }
+
+    [BindProperty]
+    public bool DepositConfirmed { get; set; }
+
+    [BindProperty]
+    public int DepositPaymentMethod { get; set; } = 1;
+
+    [BindProperty]
+    public string? DepositPaymentNote { get; set; }
+
     public async Task<IActionResult> OnGetAsync(int id)
     {
-        var client = _httpClientFactory.CreateClient("GobikeApi");
-        var response = await client.GetAsync($"/api/rentalcontract/{id}");
+        if (!await LoadRentalAsync(id)) return NotFound();
 
-        if (!response.IsSuccessStatusCode) return NotFound();
-
-        var json = await response.Content.ReadAsStringAsync();
-        Rental = JsonSerializer.Deserialize<RentalDetail>(json,
-            new JsonSerializerOptions { PropertyNameCaseInsensitive = true }) ?? new RentalDetail();
+        StartMileage = Rental.StartMileage ?? Rental.MotorcycleMileage ?? 0;
+        FuelLevel = "Full";
+        VehicleCondition = "Good";
+        DepositPaymentMethod = 1;
 
         return Page();
     }
@@ -40,20 +66,106 @@ public class ActivateModel : PageModel
         if (StartMileage < 0)
         {
             ModelState.AddModelError(nameof(StartMileage), "Start mileage must be 0 or greater.");
-            return await OnGetAsync(id);
+            await LoadRentalAsync(id);
+            return Page();
+        }
+
+        if (string.IsNullOrWhiteSpace(FuelLevel))
+        {
+            ModelState.AddModelError(nameof(FuelLevel), "Fuel level is required.");
+            await LoadRentalAsync(id);
+            return Page();
+        }
+
+        if (string.IsNullOrWhiteSpace(VehicleCondition))
+        {
+            ModelState.AddModelError(nameof(VehicleCondition), "Vehicle condition is required.");
+            await LoadRentalAsync(id);
+            return Page();
+        }
+
+        if (HasDamage && string.IsNullOrWhiteSpace(DamageDescription))
+        {
+            ModelState.AddModelError(nameof(DamageDescription), "Damage description is required when damage is reported.");
+            await LoadRentalAsync(id);
+            return Page();
+        }
+
+        if (!DepositConfirmed)
+        {
+            ModelState.AddModelError(nameof(DepositConfirmed), "Admin must confirm the deposit before activation.");
+            await LoadRentalAsync(id);
+            return Page();
         }
 
         var client = _httpClientFactory.CreateClient("GobikeApi");
-        var response = await client.PutAsync($"/api/rentalcontract/{id}/activate?startMileage={StartMileage}", null);
+        var payload = new
+        {
+            beforeInspection = new
+            {
+                mileage = StartMileage,
+                fuelLevel = FuelLevel,
+                vehicleCondition = VehicleCondition,
+                hasDamage = HasDamage,
+                damageDescription = DamageDescription,
+                accessoriesNote = AccessoriesNote,
+                note = InspectionNote
+            },
+            depositConfirmed = DepositConfirmed,
+            depositPaymentMethod = DepositPaymentMethod,
+            depositPaymentNote = DepositPaymentNote
+        };
+
+        var response = await client.PostAsJsonAsync($"/api/rental-contracts/{id}/handover", payload);
 
         if (!response.IsSuccessStatusCode)
         {
-            ErrorMessage = "Failed to activate rental contract.";
-            return await OnGetAsync(id);
+            ErrorMessage = await ReadErrorMessageAsync(response, "Failed to activate rental contract.");
+            await LoadRentalAsync(id);
+            return Page();
         }
 
         TempData?["SuccessMessage"] = "Rental contract activated successfully.";
         return RedirectToPage("./Details", new { id });
+    }
+
+    private async Task<bool> LoadRentalAsync(int id)
+    {
+        var client = _httpClientFactory.CreateClient("GobikeApi");
+        var response = await client.GetAsync($"/api/rental-contracts/{id}");
+
+        if (!response.IsSuccessStatusCode) return false;
+
+        var json = await response.Content.ReadAsStringAsync();
+        Rental = JsonSerializer.Deserialize<RentalDetail>(json,
+            new JsonSerializerOptions { PropertyNameCaseInsensitive = true }) ?? new RentalDetail();
+
+        return true;
+    }
+
+    private static async Task<string> ReadErrorMessageAsync(HttpResponseMessage response, string fallback)
+    {
+        var json = await response.Content.ReadAsStringAsync();
+        if (string.IsNullOrWhiteSpace(json)) return fallback;
+
+        try
+        {
+            using var document = JsonDocument.Parse(json);
+            if (document.RootElement.TryGetProperty("message", out var message))
+                return message.GetString() ?? fallback;
+
+            if (document.RootElement.TryGetProperty("title", out var title))
+                return title.GetString() ?? fallback;
+
+            if (document.RootElement.TryGetProperty("errors", out var errors))
+                return errors.ToString();
+        }
+        catch (JsonException)
+        {
+            return json;
+        }
+
+        return fallback;
     }
 
     public static string GetStatusName(int status) => status switch
@@ -62,6 +174,7 @@ public class ActivateModel : PageModel
         2 => "Active",
         3 => "Completed",
         4 => "Cancelled",
+        5 => "NoShow",
         _ => "Unknown"
     };
 }

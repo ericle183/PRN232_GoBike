@@ -4,8 +4,12 @@
     ViewData["Title"] = "Rentals / Complete";
 }
 
-<div class="d-flex justify-content-between align-items-center mb-4">
-    <h1 class="h4 mb-0">Complete Rental</h1>
+<div class="page-heading">
+    <div>
+        <div class="page-kicker">Rental return</div>
+        <h1>Complete Rental</h1>
+        <p class="page-subtitle">Record the return inspection and settle the contract.</p>
+    </div>
     <a asp-page="Details" asp-route-id="@Model.Rental.Id" class="btn btn-outline-secondary">Back</a>
 </div>
 
@@ -14,10 +18,7 @@
     <div class="alert alert-danger">@Model.ErrorMessage</div>
 }
 
-<div class="card">
-    <div class="card-header bg-success text-white">
-        <h2 class="h6 mb-0">Complete Rental Contract</h2>
-    </div>
+<div class="content-card">
     <div class="card-body">
         <dl class="row mb-3">
             <dt class="col-sm-4 text-muted">Motorcycle</dt>
@@ -51,6 +52,120 @@
                         </label>
                         <input class="form-control" id="EndMileage" type="number" min="0" asp-for="EndMileage" oninput="estimateFinalAmount()" />
                         <span asp-validation-for="EndMileage" class="text-danger"></span>
+                    </div>
+                </div>
+            </div>
+
+            <div class="row">
+                <div class="col-md-4">
+                    <div class="mb-3">
+                        <label class="form-label fw-bold" for="FuelLevel">
+                            Fuel Level <span style="color: #EF4444;">*</span>
+                        </label>
+                        <select class="form-select" id="FuelLevel" asp-for="FuelLevel">
+                            <option value="Full">Full</option>
+                            <option value="3/4">3/4</option>
+                            <option value="1/2">1/2</option>
+                            <option value="1/4">1/4</option>
+                            <option value="Empty">Empty</option>
+                        </select>
+                        <span asp-validation-for="FuelLevel" class="text-danger"></span>
+                    </div>
+                </div>
+                <div class="col-md-4">
+                    <div class="mb-3">
+                        <label class="form-label fw-bold" for="VehicleCondition">
+                            Vehicle Condition <span style="color: #EF4444;">*</span>
+                        </label>
+                        <input class="form-control" id="VehicleCondition" asp-for="VehicleCondition" />
+                        <span asp-validation-for="VehicleCondition" class="text-danger"></span>
+                    </div>
+                </div>
+                <div class="col-md-4">
+                    <div class="mb-3">
+                        <label class="form-label fw-bold" for="MotorcycleStatusAfterReturn">Status After Return</label>
+                        <select class="form-select" id="MotorcycleStatusAfterReturn" asp-for="MotorcycleStatusAfterReturn">
+                            <option value="1">Available</option>
+                            <option value="4">Maintenance</option>
+                        </select>
+                    </div>
+                </div>
+            </div>
+
+            <div class="form-check mb-3">
+                <input class="form-check-input" id="HasDamage" asp-for="HasDamage" />
+                <label class="form-check-label fw-bold" for="HasDamage">Damage found after return</label>
+            </div>
+
+            <div class="row">
+                <div class="col-md-6">
+                    <div class="mb-3">
+                        <label class="form-label fw-bold" for="DamageFee">Damage Fee</label>
+                        <input class="form-control" id="DamageFee" type="number" min="0" step="1000" asp-for="DamageFee" />
+                        <span asp-validation-for="DamageFee" class="text-danger"></span>
+                    </div>
+                    <div class="mb-3">
+                        <label class="form-label fw-bold" for="DamageDescription">Damage Description</label>
+                        <textarea class="form-control" id="DamageDescription" rows="3" asp-for="DamageDescription"></textarea>
+                        <span asp-validation-for="DamageDescription" class="text-danger"></span>
+                    </div>
+                </div>
+                <div class="col-md-6">
+                    <div class="mb-3">
+                        <label class="form-label fw-bold" for="OtherFee">Other Fee</label>
+                        <input class="form-control" id="OtherFee" type="number" min="0" step="1000" asp-for="OtherFee" />
+                        <span asp-validation-for="OtherFee" class="text-danger"></span>
+                    </div>
+                    <div class="mb-3">
+                        <label class="form-label fw-bold" for="OtherFeeDescription">Other Fee Description</label>
+                        <textarea class="form-control" id="OtherFeeDescription" rows="3" asp-for="OtherFeeDescription"></textarea>
+                        <span asp-validation-for="OtherFeeDescription" class="text-danger"></span>
+                    </div>
+                </div>
+            </div>
+
+            <div class="row">
+                <div class="col-md-4">
+                    <div class="mb-3">
+                        <label class="form-label fw-bold" for="DiscountAmount">Discount Amount</label>
+                        <input class="form-control" id="DiscountAmount" type="number" min="0" step="1000" asp-for="DiscountAmount" />
+                        <span asp-validation-for="DiscountAmount" class="text-danger"></span>
+                    </div>
+                </div>
+                <div class="col-md-4">
+                    <div class="mb-3">
+                        <label class="form-label fw-bold" for="SettlementPaymentMethod">Settlement Method</label>
+                        <select class="form-select" id="SettlementPaymentMethod" asp-for="SettlementPaymentMethod">
+                            <option value="1">Cash</option>
+                            <option value="2">Bank Transfer</option>
+                        </select>
+                    </div>
+                </div>
+                <div class="col-md-4">
+                    <div class="mb-3">
+                        <label class="form-label fw-bold" for="SettlementPaymentNote">Settlement Note</label>
+                        <input class="form-control" id="SettlementPaymentNote" asp-for="SettlementPaymentNote" />
+                    </div>
+                </div>
+            </div>
+
+            <div class="mb-3">
+                <label class="form-label fw-bold" for="DiscountReason">Discount Reason</label>
+                <input class="form-control" id="DiscountReason" asp-for="DiscountReason" />
+                <span asp-validation-for="DiscountReason" class="text-danger"></span>
+            </div>
+
+            <div class="row">
+                <div class="col-md-6">
+                    <div class="mb-3">
+                        <label class="form-label fw-bold" for="AccessoriesNote">Accessories Note</label>
+                        <textarea class="form-control" id="AccessoriesNote" rows="2" asp-for="AccessoriesNote"></textarea>
+                    </div>
+                </div>
+                <div class="col-md-6">
+                    <div class="mb-3">
+                        <label class="form-label fw-bold" for="InspectionNote">Inspection Note</label>
+                        <textarea class="form-control" id="InspectionNote" rows="2" asp-for="InspectionNote"></textarea>
                     </div>
                 </div>
             </div>

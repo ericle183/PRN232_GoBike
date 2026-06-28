@@ -7,8 +7,8 @@
 <div class="page-heading">
     <div>
         <div class="page-kicker">Rental workflow</div>
-        <h1>Create Rental Contract</h1>
-        <p class="page-subtitle">Select a customer, choose an available motorcycle, and set the expected rental period.</p>
+        <h1>Create Rental Reservation</h1>
+        <p class="page-subtitle">Staff can reserve a motorcycle for a customer. Admin confirms deposit and activates it later.</p>
     </div>
     <a asp-page="Index" class="btn btn-outline-secondary">Back</a>
 </div>
@@ -76,10 +76,8 @@
                         <span asp-validation-for="Form.ExpectedReturnDate" class="text-danger"></span>
                     </div>
 
-                    <div class="mb-3">
-                        <label class="form-label fw-bold" for="DepositAmount">Deposit Amount</label>
-                        <input class="form-control" id="DepositAmount" type="number" step="1000" min="0" asp-for="Form.DepositAmount" />
-                        <div class="form-text">Leave at 0 if no deposit is required.</div>
+                    <div class="alert alert-info mb-3">
+                        Admin will confirm the deposit and activate this reservation before handover.
                     </div>
                 </div>
             </div>
@@ -91,7 +89,7 @@
 
             <hr />
             <div class="d-flex gap-2">
-                <button type="submit" class="btn btn-primary">Create rental</button>
+                <button type="submit" class="btn btn-primary">Create reservation</button>
                 <a asp-page="Index" class="btn btn-outline-secondary">Cancel</a>
             </div>
         </form>

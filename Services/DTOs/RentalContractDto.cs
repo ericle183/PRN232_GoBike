@@ -24,6 +24,7 @@ public class RentalContractDetailDto
     public int MotorcycleId { get; set; }
     public string? CustomerFullName { get; set; }
     public string? MotorcycleLicensePlate { get; set; }
+    public int? MotorcycleMileage { get; set; }
     public DateTime RentalDate { get; set; }
     public DateTime ExpectedReturnDate { get; set; }
     public DateTime? ActualReturnDate { get; set; }

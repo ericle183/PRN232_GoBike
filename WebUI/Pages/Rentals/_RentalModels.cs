@@ -21,6 +21,7 @@ public class RentalDetail
     public DateTime RentalDate { get; set; }
     public DateTime ExpectedReturnDate { get; set; }
     public DateTime? ActualReturnDate { get; set; }
+    public int? MotorcycleMileage { get; set; }
     public decimal DailyRate { get; set; }
     public decimal TotalAmount { get; set; }
     public decimal DepositAmount { get; set; }
@@ -64,9 +65,8 @@ public class RentalCreateForm
 {
     public int CustomerId { get; set; }
     public int MotorcycleId { get; set; }
-    public DateTime RentalDate { get; set; }
-    public DateTime ExpectedReturnDate { get; set; }
-    public decimal DepositAmount { get; set; }
+    public DateTime RentalDate { get; set; } = DateTime.Today;
+    public DateTime ExpectedReturnDate { get; set; } = DateTime.Today.AddDays(1);
     public string? Notes { get; set; }
 }
 

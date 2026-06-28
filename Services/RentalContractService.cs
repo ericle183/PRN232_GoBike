@@ -28,8 +28,6 @@ public class RentalContractService : IRentalContractService
 
     public async Task<RentalContract> ReserveAsync(ReserveRentalRequestDto request, int? userId)
     {
-        ValidateDepositConfirmation(request.DepositConfirmed);
-        ValidatePaymentMethod(request.DepositPaymentMethod, nameof(request.DepositPaymentMethod));
         ValidateDateRange(request.StartDate, request.EndDate);
         ValidateAdvanceBookingLimit(request.StartDate);
 
@@ -47,8 +45,6 @@ public class RentalContractService : IRentalContractService
         context.RentalContracts.Add(contract);
         await context.SaveChangesAsync();
 
-        context.RentalPayments.Add(CreatePayment(contract.Id, PaymentType.Deposit, contract.DepositAmount, request.DepositPaymentMethod, request.DepositPaymentNote, userId));
-        await context.SaveChangesAsync();
         await transaction.CommitAsync();
 
         return await LoadContractAsync(contract.Id) ?? contract;
@@ -87,6 +83,8 @@ public class RentalContractService : IRentalContractService
 
     public async Task<RentalContract> HandoverAsync(int id, HandoverRentalRequestDto request, int? userId)
     {
+        ValidateDepositConfirmation(request.DepositConfirmed);
+        ValidatePaymentMethod(request.DepositPaymentMethod, nameof(request.DepositPaymentMethod));
         ValidateInspection(request.BeforeInspection);
 
         await using var transaction = await context.Database.BeginTransactionAsync();
@@ -105,6 +103,9 @@ public class RentalContractService : IRentalContractService
         if (contract.Inspections.Any(i => i.InspectionType == InspectionType.BeforeRental))
             throw new InvalidOperationException("BeforeRental inspection already exists");
 
+        if (contract.Payments.Any(p => p.PaymentType == PaymentType.Deposit))
+            throw new InvalidOperationException("Deposit payment already exists");
+
         contract.Status = RentalStatus.Active;
         contract.UpdatedAt = DateTime.UtcNow;
         contract.UpdatedByUserId = userId;
@@ -114,6 +115,7 @@ public class RentalContractService : IRentalContractService
         contract.Motorcycle.UpdatedAt = DateTime.UtcNow;
 
         context.RentalInspections.Add(CreateInspection(contract.Id, InspectionType.BeforeRental, request.BeforeInspection, userId));
+        context.RentalPayments.Add(CreatePayment(contract.Id, PaymentType.Deposit, contract.DepositAmount, request.DepositPaymentMethod, request.DepositPaymentNote, userId));
         await context.SaveChangesAsync();
         await transaction.CommitAsync();
 
@@ -201,11 +203,12 @@ public class RentalContractService : IRentalContractService
         if (contract.Status != RentalStatus.Reserved)
             throw new InvalidOperationException("Only reserved contracts can be cancelled");
 
-        contract.CancellationFee = Math.Round(contract.DepositAmount * 0.5m, 2);
-        contract.RefundAmount = contract.DepositAmount - contract.CancellationFee;
+        var depositPaid = contract.Payments.Any(p => p.PaymentType == PaymentType.Deposit);
+        contract.CancellationFee = depositPaid ? Math.Round(contract.DepositAmount * 0.5m, 2) : 0;
+        contract.RefundAmount = depositPaid ? contract.DepositAmount - contract.CancellationFee : 0;
         contract.AdditionalPaymentAmount = 0;
         contract.FinalAmount = 0;
-        contract.RemainingAmount = contract.CancellationFee - contract.DepositAmount;
+        contract.RemainingAmount = depositPaid ? contract.CancellationFee - contract.DepositAmount : 0;
         contract.Status = RentalStatus.Cancelled;
         contract.CancelledAt = DateTime.UtcNow;
         contract.CancelledByUserId = userId;
@@ -243,7 +246,8 @@ public class RentalContractService : IRentalContractService
         if (DateTime.Today < contract.StartDate.Date)
             throw new InvalidOperationException("Cannot mark NoShow before StartDate");
 
-        contract.CancellationFee = contract.DepositAmount;
+        var depositPaid = contract.Payments.Any(p => p.PaymentType == PaymentType.Deposit);
+        contract.CancellationFee = depositPaid ? contract.DepositAmount : 0;
         contract.RefundAmount = 0;
         contract.AdditionalPaymentAmount = 0;
         contract.FinalAmount = 0;
@@ -367,7 +371,7 @@ public class RentalContractService : IRentalContractService
     private static void ValidateDepositConfirmation(bool depositConfirmed)
     {
         if (!depositConfirmed)
-            throw new InvalidOperationException("Deposit must be collected before creating a contract");
+            throw new InvalidOperationException("Deposit must be collected before activating a contract");
     }
 
     private static void ValidateMotorcycleAvailable(Motorcycle motorcycle)

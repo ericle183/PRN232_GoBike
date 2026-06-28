@@ -10,9 +10,9 @@
         <h1>Rental Contracts</h1>
         <p class="page-subtitle">Track reservations, active rentals, returns, and settlements.</p>
     </div>
-    @if (User.IsInRole("Admin"))
+    @if (User.IsInRole("Admin") || User.IsInRole("Staff"))
     {
-        <a asp-page="Create" class="btn btn-primary">Create rental</a>
+        <a asp-page="Create" class="btn btn-primary">Create reservation</a>
     }
 </div>
 
