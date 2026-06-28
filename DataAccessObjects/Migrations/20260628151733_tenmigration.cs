@@ -87,6 +87,7 @@ namespace DataAccessObjects.Migrations
                     Color = table.Column<string>(type: "nvarchar(30)", maxLength: 30, nullable: false),
                     Mileage = table.Column<int>(type: "int", nullable: false),
                     RegistrationNo = table.Column<string>(type: "nvarchar(20)", maxLength: 20, nullable: true),
+                    ImageUrl = table.Column<string>(type: "nvarchar(500)", maxLength: 500, nullable: true),
                     IsActive = table.Column<bool>(type: "bit", nullable: false),
                     CreatedAt = table.Column<DateTime>(type: "datetime2", nullable: false),
                     UpdatedAt = table.Column<DateTime>(type: "datetime2", nullable: true)
