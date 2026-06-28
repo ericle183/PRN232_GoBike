@@ -21,7 +21,7 @@ public interface IGoBikeApiClient
         decimal? minPrice,
         decimal? maxPrice,
         int pageNumber,
-        int pageSize = 10);
+        int pageSize = 20);
 
     Task<(bool Success, MotorcycleDetailDto? Motorcycle, string? Error)> GetMotorcycleAsync(int id);
     Task<(bool Success, MotorcycleDto? Motorcycle, string? Error)> CreateMotorcycleAsync(CreateMotorcycleRequest request);

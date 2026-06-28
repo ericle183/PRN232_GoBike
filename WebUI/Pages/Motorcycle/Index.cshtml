@@ -1,23 +1,20 @@
 @page
 @model WebUI.Pages.Motorcycle.IndexModel
 @using BusinessObjects.Enums
-@using WebUI.Helpers
 @{
     ViewData["Title"] = "Motorcycle Management";
-    if (User.Identity?.IsAuthenticated == true)
-    {
-        Layout = AuthorizationHelper.GetLayoutPath(User) == "_LayoutAdmin"
-            ? "/Views/Shared/_LayoutAdmin.cshtml"
-            : "/Views/Shared/_LayoutStaff.cshtml";
-    }
 }
 
-<div class="d-flex justify-content-between align-items-center mb-3">
-    <h2>Motorcycle Management</h2>
+<div class="page-heading">
+    <div>
+        <div class="page-kicker">Fleet inventory</div>
+        <h1>Motorcycle Management</h1>
+        <p class="page-subtitle">Browse motorcycles in a product-style grid with photos, rates, and status.</p>
+    </div>
     @if (User.IsInRole("Admin"))
     {
         <button class="btn btn-primary" data-bs-toggle="modal" data-bs-target="#createModal">
-            + Add Motorcycle
+            Add motorcycle
         </button>
     }
 </div>
@@ -37,13 +34,12 @@
     </div>
 }
 
-<!-- Search & Filter -->
-<form method="get" class="card card-body mb-3">
+<form method="get" class="filter-panel mb-4">
     <div class="row g-2 align-items-end">
         <div class="col-md-3">
             <label class="form-label">Search</label>
             <input type="text" name="Search" value="@Model.Search" class="form-control"
-                   placeholder="Plate, Brand, Model..." />
+                   placeholder="Plate, brand, model..." />
         </div>
         <div class="col-md-2">
             <label class="form-label">Status</label>
@@ -64,59 +60,55 @@
             <input type="number" name="MaxPrice" value="@Model.MaxPrice" class="form-control" placeholder="999999" />
         </div>
         <div class="col-md-3 d-flex gap-2">
-            <button type="submit" class="btn btn-outline-primary">Search</button>
+            <button type="submit" class="btn btn-primary">Search</button>
             <a asp-page="./Index" class="btn btn-outline-secondary">Clear</a>
         </div>
     </div>
 </form>
 
-<!-- Table -->
-<div class="table-responsive">
-    <table class="table table-hover">
-        <thead class="table-light">
-            <tr>
-                <th>#</th>
-                <th>License Plate</th>
-                <th>Brand</th>
-                <th>Model</th>
-                <th>Type</th>
-                <th>Status</th>
-                <th>Daily Rate</th>
-                <th>Color</th>
-                <th>Mileage</th>
-                <th>Actions</th>
-            </tr>
-        </thead>
-        <tbody>
-            @if (Model.Result.Items.Count == 0)
+@if (Model.Result.Items.Count == 0)
+{
+    <div class="empty-state">
+        <strong>No motorcycles found.</strong>
+        <div>Try another search or clear the filters.</div>
+    </div>
+}
+else
+{
+    <div class="motorcycle-grid">
+        @foreach (var item in Model.Result.Items)
+        {
+            var badgeClass = item.Status switch
             {
-                <tr><td colspan="10" class="text-center text-muted py-4">No motorcycles found.</td></tr>
-            }
-            @foreach (var item in Model.Result.Items)
-            {
-                var badgeClass = item.Status switch
-                {
-                    MotorcycleStatus.Available => "badge-available",
-                    MotorcycleStatus.Reserved => "badge-reserved",
-                    MotorcycleStatus.Rented => "badge-rented",
-                    MotorcycleStatus.Maintenance => "badge-maintenance",
-                    _ => "bg-light text-dark"
-                };
+                MotorcycleStatus.Available => "badge-available",
+                MotorcycleStatus.Reserved => "badge-reserved",
+                MotorcycleStatus.Rented => "badge-rented",
+                MotorcycleStatus.Maintenance => "badge-maintenance",
+                _ => "bg-light text-dark"
+            };
+            var imageUrl = string.IsNullOrWhiteSpace(item.ImageUrl)
+                ? "/images/motorcycle-placeholder.svg"
+                : item.ImageUrl;
 
-                <tr>
-                    <td>@item.Id</td>
-                    <td><strong>@item.LicensePlate</strong></td>
-                    <td>@item.Brand</td>
-                    <td>@item.Model</td>
-                    <td>@item.VehicleTypeName</td>
-                    <td><span class="badge @badgeClass">@item.StatusText</span></td>
-                    <td>@item.DailyRate.ToString("#,##0") VND</td>
-                    <td>@item.Color</td>
-                    <td>@item.Mileage.ToString("#,##0") km</td>
-                    <td>
+            <article class="motorcycle-card">
+                <a asp-page="./Details" asp-route-id="@item.Id"
+                   class="motorcycle-image-wrap">
+                    <img src="@imageUrl" alt="@item.Brand @item.Model" loading="lazy"
+                         onerror="this.onerror=null; this.src='/images/motorcycle-placeholder.svg';" />
+                    <span class="badge @badgeClass motorcycle-status">@item.StatusText</span>
+                </a>
+                <div class="motorcycle-card-body">
+                    <div class="motorcycle-title">@item.Brand @item.Model</div>
+                    <div class="motorcycle-plate">@item.LicensePlate</div>
+                    <div class="motorcycle-price">@item.DailyRate.ToString("#,##0") VND/day</div>
+                    <div class="motorcycle-meta">
+                        <span>@item.VehicleTypeName</span>
+                        <span>@item.Color - @item.Mileage.ToString("#,##0") km</span>
+                    </div>
+                    <div class="motorcycle-actions">
                         <a asp-page="./Details" asp-route-id="@item.Id"
-                           class="btn btn-sm btn-outline-info">View</a>
-                        <button class="btn btn-sm btn-outline-primary btn-edit"
+                           class="btn btn-sm btn-outline-primary">View</a>
+                        <button class="btn btn-sm btn-outline-secondary btn-edit"
                                 data-bs-toggle="modal" data-bs-target="#editModal"
                                 data-id="@item.Id"
                                 data-licenseplate="@item.LicensePlate"
@@ -126,7 +118,8 @@
                                 data-dailyrate="@item.DailyRate"
                                 data-color="@item.Color"
                                 data-mileage="@item.Mileage"
-                                data-registrationno="@item.RegistrationNo">
+                                data-registrationno="@item.RegistrationNo"
+                                data-imageurl="@item.ImageUrl">
                             Edit
                         </button>
                         @if (User.IsInRole("Admin"))
@@ -138,17 +131,16 @@
                                 Delete
                             </button>
                         }
-                    </td>
-                </tr>
-            }
-        </tbody>
-    </table>
-</div>
+                    </div>
+                </div>
+            </article>
+        }
+    </div>
+}
 
-<!-- Pagination -->
 @if (Model.Result.TotalPages > 1)
 {
-    <nav>
+    <nav class="mt-4">
         <ul class="pagination justify-content-center">
             <li class="page-item @(Model.Result.HasPreviousPage ? "" : "disabled")">
                 <a class="page-link" asp-page="./Index"
@@ -180,61 +172,72 @@
         </ul>
     </nav>
 }
-<p class="text-muted text-center">Showing @Model.Result.Items.Count of @Model.Result.TotalItems motorcycles</p>
+<p class="text-muted text-center mt-3">Showing @Model.Result.Items.Count of @Model.Result.TotalItems motorcycles</p>
 
-<!-- ===== CREATE MODAL ===== -->
 <div class="modal fade" id="createModal" tabindex="-1">
-    <div class="modal-dialog">
-        <form method="post" asp-page-handler="Create" class="modal-content">
+    <div class="modal-dialog modal-lg">
+        <form method="post" asp-page-handler="Create" enctype="multipart/form-data" class="modal-content">
             <div class="modal-header">
                 <h5 class="modal-title">Add Motorcycle</h5>
                 <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
             </div>
             <div class="modal-body">
-                <div class="mb-3">
-                    <label class="form-label">License Plate <span class="text-danger">*</span></label>
-                    <input type="text" name="LicensePlate" class="form-control" required
-                           placeholder="e.g. 51A-12345" pattern="[0-9]{2}[A-Z]{1,2}-[0-9]{4,5}" />
-                </div>
-                <div class="row mb-3">
-                    <div class="col-6">
-                        <label class="form-label">Brand <span class="text-danger">*</span></label>
-                        <input type="text" name="Brand" class="form-control" required />
+                <div class="row g-3">
+                    <div class="col-md-5">
+                        <label class="form-label">Motorcycle image</label>
+                        <div class="motorcycle-preview mb-2" id="create-preview">
+                            <div class="motorcycle-preview-placeholder">Choose an image</div>
+                        </div>
+                        <input type="file" name="imageFile" id="create-imagefile" class="form-control" accept="image/*" />
+                        <div class="form-text">JPG, PNG, WEBP, or GIF. Max 5 MB.</div>
                     </div>
-                    <div class="col-6">
-                        <label class="form-label">Model <span class="text-danger">*</span></label>
-                        <input type="text" name="Model" class="form-control" required />
+                    <div class="col-md-7">
+                        <div class="mb-3">
+                            <label class="form-label">License Plate <span class="text-danger">*</span></label>
+                            <input type="text" name="LicensePlate" class="form-control" required
+                                   placeholder="e.g. 51A-12345" pattern="[0-9]{2}[A-Z]{1,2}-[0-9]{4,5}" />
+                        </div>
+                        <div class="row mb-3">
+                            <div class="col-6">
+                                <label class="form-label">Brand <span class="text-danger">*</span></label>
+                                <input type="text" name="Brand" class="form-control" required />
+                            </div>
+                            <div class="col-6">
+                                <label class="form-label">Model <span class="text-danger">*</span></label>
+                                <input type="text" name="Model" class="form-control" required />
+                            </div>
+                        </div>
+                        <div class="row mb-3">
+                            <div class="col-6">
+                                <label class="form-label">Vehicle Type <span class="text-danger">*</span></label>
+                                <select name="VehicleTypeId" class="form-select" required>
+                                    <option value="">-- Select --</option>
+                                    @foreach (var t in Model.VehicleTypes)
+                                    {
+                                        <option value="@t.Id">@t.Name</option>
+                                    }
+                                </select>
+                            </div>
+                            <div class="col-6">
+                                <label class="form-label">Daily Rate (VND)</label>
+                                <input type="number" name="DailyRate" class="form-control" min="1000" />
+                            </div>
+                        </div>
+                        <div class="row mb-3">
+                            <div class="col-6">
+                                <label class="form-label">Color <span class="text-danger">*</span></label>
+                                <input type="text" name="Color" class="form-control" required />
+                            </div>
+                            <div class="col-6">
+                                <label class="form-label">Mileage (km)</label>
+                                <input type="number" name="Mileage" class="form-control" value="0" min="0" />
+                            </div>
+                        </div>
+                        <div>
+                            <label class="form-label">Registration No</label>
+                            <input type="text" name="RegistrationNo" class="form-control" />
+                        </div>
                     </div>
-                </div>
-                <div class="row mb-3">
-                    <div class="col-6">
-                        <label class="form-label">Vehicle Type <span class="text-danger">*</span></label>
-                        <select name="VehicleTypeId" class="form-select" required>
-                            <option value="">-- Select --</option>
-                            @foreach (var t in Model.VehicleTypes)
-                            {
-                                <option value="@t.Id">@t.Name</option>
-                            }
-                        </select>
-                    </div>
-                    <div class="col-6">
-                        <label class="form-label">Daily Rate (VND) <span class="text-danger">*</span></label>
-                        <input type="number" name="DailyRate" class="form-control" required min="1000" />
-                    </div>
-                </div>
-                <div class="row mb-3">
-                    <div class="col-6">
-                        <label class="form-label">Color <span class="text-danger">*</span></label>
-                        <input type="text" name="Color" class="form-control" required />
-                    </div>
-                    <div class="col-6">
-                        <label class="form-label">Mileage (km)</label>
-                        <input type="number" name="Mileage" class="form-control" value="0" min="0" />
-                    </div>
-                </div>
-                <div class="mb-3">
-                    <label class="form-label">Registration No</label>
-                    <input type="text" name="RegistrationNo" class="form-control" />
                 </div>
             </div>
             <div class="modal-footer">
@@ -245,59 +248,71 @@
     </div>
 </div>
 
-<!-- ===== EDIT MODAL ===== -->
 <div class="modal fade" id="editModal" tabindex="-1">
-    <div class="modal-dialog">
-        <form method="post" asp-page-handler="Edit" class="modal-content">
+    <div class="modal-dialog modal-lg">
+        <form method="post" asp-page-handler="Edit" enctype="multipart/form-data" class="modal-content">
             <input type="hidden" name="id" id="edit-id" />
+            <input type="hidden" name="ImageUrl" id="edit-imageurl" />
             <div class="modal-header">
                 <h5 class="modal-title">Edit Motorcycle</h5>
                 <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
             </div>
             <div class="modal-body">
-                <div class="mb-3">
-                    <label class="form-label">License Plate</label>
-                    <input type="text" name="LicensePlate" id="edit-licenseplate" class="form-control"
-                           pattern="[0-9]{2}[A-Z]{1,2}-[0-9]{4,5}" />
-                </div>
-                <div class="row mb-3">
-                    <div class="col-6">
-                        <label class="form-label">Brand</label>
-                        <input type="text" name="Brand" id="edit-brand" class="form-control" />
+                <div class="row g-3">
+                    <div class="col-md-5">
+                        <label class="form-label">Motorcycle image</label>
+                        <div class="motorcycle-preview mb-2" id="edit-preview">
+                            <div class="motorcycle-preview-placeholder">No image</div>
+                        </div>
+                        <input type="file" name="imageFile" id="edit-imagefile" class="form-control" accept="image/*" />
+                        <div class="form-text">Upload a new image to replace the current one.</div>
                     </div>
-                    <div class="col-6">
-                        <label class="form-label">Model</label>
-                        <input type="text" name="Model" id="edit-model" class="form-control" />
+                    <div class="col-md-7">
+                        <div class="mb-3">
+                            <label class="form-label">License Plate</label>
+                            <input type="text" name="LicensePlate" id="edit-licenseplate" class="form-control"
+                                   pattern="[0-9]{2}[A-Z]{1,2}-[0-9]{4,5}" />
+                        </div>
+                        <div class="row mb-3">
+                            <div class="col-6">
+                                <label class="form-label">Brand</label>
+                                <input type="text" name="Brand" id="edit-brand" class="form-control" />
+                            </div>
+                            <div class="col-6">
+                                <label class="form-label">Model</label>
+                                <input type="text" name="Model" id="edit-model" class="form-control" />
+                            </div>
+                        </div>
+                        <div class="row mb-3">
+                            <div class="col-6">
+                                <label class="form-label">Vehicle Type</label>
+                                <select name="VehicleTypeId" id="edit-vehicletypeid" class="form-select">
+                                    @foreach (var t in Model.VehicleTypes)
+                                    {
+                                        <option value="@t.Id">@t.Name</option>
+                                    }
+                                </select>
+                            </div>
+                            <div class="col-6">
+                                <label class="form-label">Daily Rate (VND)</label>
+                                <input type="number" name="DailyRate" id="edit-dailyrate" class="form-control" min="1000" />
+                            </div>
+                        </div>
+                        <div class="row mb-3">
+                            <div class="col-6">
+                                <label class="form-label">Color</label>
+                                <input type="text" name="Color" id="edit-color" class="form-control" />
+                            </div>
+                            <div class="col-6">
+                                <label class="form-label">Mileage (km)</label>
+                                <input type="number" name="Mileage" id="edit-mileage" class="form-control" min="0" />
+                            </div>
+                        </div>
+                        <div>
+                            <label class="form-label">Registration No</label>
+                            <input type="text" name="RegistrationNo" id="edit-registrationno" class="form-control" />
+                        </div>
                     </div>
-                </div>
-                <div class="row mb-3">
-                    <div class="col-6">
-                        <label class="form-label">Vehicle Type</label>
-                        <select name="VehicleTypeId" id="edit-vehicletypeid" class="form-select">
-                            @foreach (var t in Model.VehicleTypes)
-                            {
-                                <option value="@t.Id">@t.Name</option>
-                            }
-                        </select>
-                    </div>
-                    <div class="col-6">
-                        <label class="form-label">Daily Rate (VND)</label>
-                        <input type="number" name="DailyRate" id="edit-dailyrate" class="form-control" min="1000" />
-                    </div>
-                </div>
-                <div class="row mb-3">
-                    <div class="col-6">
-                        <label class="form-label">Color</label>
-                        <input type="text" name="Color" id="edit-color" class="form-control" />
-                    </div>
-                    <div class="col-6">
-                        <label class="form-label">Mileage (km)</label>
-                        <input type="number" name="Mileage" id="edit-mileage" class="form-control" min="0" />
-                    </div>
-                </div>
-                <div class="mb-3">
-                    <label class="form-label">Registration No</label>
-                    <input type="text" name="RegistrationNo" id="edit-registrationno" class="form-control" />
                 </div>
             </div>
             <div class="modal-footer">
@@ -308,7 +323,6 @@
     </div>
 </div>
 
-<!-- ===== DELETE MODAL ===== -->
 <div class="modal fade" id="deleteModal" tabindex="-1">
     <div class="modal-dialog">
         <form method="post" asp-page-handler="Delete" class="modal-content">
@@ -331,6 +345,47 @@
 
 @section Scripts {
 <script>
+    function renderImagePreview(containerId, imageUrl) {
+        const container = document.getElementById(containerId);
+        if (!container) return;
+
+        container.innerHTML = '';
+        if (!imageUrl) {
+            const placeholder = document.createElement('div');
+            placeholder.className = 'motorcycle-preview-placeholder';
+            placeholder.textContent = 'No image';
+            container.appendChild(placeholder);
+            return;
+        }
+
+        const img = document.createElement('img');
+        img.src = imageUrl;
+        img.alt = 'Motorcycle image preview';
+        img.onerror = function () {
+            renderImagePreview(containerId, '');
+        };
+        container.appendChild(img);
+    }
+
+    function bindFilePreview(inputId, previewId) {
+        const input = document.getElementById(inputId);
+        if (!input) return;
+
+        input.addEventListener('change', function () {
+            const file = this.files && this.files[0];
+            if (!file) return;
+            renderImagePreview(previewId, URL.createObjectURL(file));
+        });
+    }
+
+    bindFilePreview('create-imagefile', 'create-preview');
+    bindFilePreview('edit-imagefile', 'edit-preview');
+
+    document.getElementById('createModal')?.addEventListener('hidden.bs.modal', function () {
+        document.getElementById('create-imagefile').value = '';
+        renderImagePreview('create-preview', '');
+    });
+
     document.querySelectorAll('.btn-edit').forEach(btn => {
         btn.addEventListener('click', function () {
             document.getElementById('edit-id').value = this.dataset.id;
@@ -342,6 +397,9 @@
             document.getElementById('edit-color').value = this.dataset.color;
             document.getElementById('edit-mileage').value = this.dataset.mileage;
             document.getElementById('edit-registrationno').value = this.dataset.registrationno || '';
+            document.getElementById('edit-imageurl').value = this.dataset.imageurl || '';
+            document.getElementById('edit-imagefile').value = '';
+            renderImagePreview('edit-preview', this.dataset.imageurl || '');
         });
     });
 

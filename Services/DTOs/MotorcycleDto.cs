@@ -16,6 +16,7 @@ public class MotorcycleDto
     public string Color { get; set; } = string.Empty;
     public int Mileage { get; set; }
     public string? RegistrationNo { get; set; }
+    public string? ImageUrl { get; set; }
     public DateTime CreatedAt { get; set; }
     public DateTime? UpdatedAt { get; set; }
 }

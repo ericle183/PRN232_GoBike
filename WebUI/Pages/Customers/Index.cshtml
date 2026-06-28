@@ -4,32 +4,35 @@
     ViewData["Title"] = "Customers / List";
 }
 
-<div class="d-flex justify-content-between align-items-center mb-4">
-    <h1 class="h4 mb-0">Customers</h1>
-    <a asp-page="Create" class="btn btn-primary">Create New</a>
+<div class="page-heading">
+    <div>
+        <div class="page-kicker">Customer records</div>
+        <h1>Customers</h1>
+        <p class="page-subtitle">Search renter profiles, identity numbers, and contact details.</p>
+    </div>
+    <a asp-page="Create" class="btn btn-primary">Add customer</a>
 </div>
 
-<div class="card mb-4">
-    <div class="card-body">
-        <form method="get" class="row g-2">
-            <div class="col-md-8">
-                <input type="text" name="search" class="form-control"
-                       placeholder="Search by name, CCCD, or phone..."
-                       value="@Model.SearchQuery" />
-            </div>
-            <div class="col-md-4">
-                <button type="submit" class="btn btn-primary w-100">Search</button>
-            </div>
-        </form>
-    </div>
+<div class="filter-panel mb-4">
+    <form method="get" class="row g-3 align-items-end">
+        <div class="col-md-9">
+            <label class="form-label">Search</label>
+            <input type="text" name="search" class="form-control"
+                   placeholder="Name, CCCD, or phone number"
+                   value="@Model.SearchQuery" />
+        </div>
+        <div class="col-md-3 d-grid">
+            <button type="submit" class="btn btn-primary">Search</button>
+        </div>
+    </form>
 </div>
 
 @if (Model.Customers.Any())
 {
-    <div class="card">
+    <div class="data-card">
         <div class="table-responsive">
-            <table class="table table-hover mb-0">
-                <thead class="table-light">
+            <table class="table table-hover">
+                <thead>
                     <tr>
                         <th>Full Name</th>
                         <th>CCCD</th>
@@ -44,16 +47,18 @@
                     @foreach (var customer in Model.Customers)
                     {
                         <tr>
-                            <td>@customer.FullName</td>
-                            <td>@WebUI.Pages.Customers.IndexModel.Mask(customer.Cccd)</td>
+                            <td><strong>@customer.FullName</strong></td>
+                            <td class="text-muted">@WebUI.Pages.Customers.IndexModel.Mask(customer.Cccd)</td>
                             <td>@WebUI.Pages.Customers.IndexModel.Mask(customer.PhoneNumber)</td>
                             <td>@customer.Email</td>
                             <td>@WebUI.Pages.Customers.IndexModel.CalculateAge(customer.DateOfBirth)</td>
                             <td>@customer.CreatedAt.ToString("dd/MM/yyyy")</td>
                             <td>
-                                <a asp-page="Details" asp-route-id="@customer.Id" class="btn btn-sm btn-outline-primary">Details</a>
-                                <a asp-page="Edit" asp-route-id="@customer.Id" class="btn btn-sm btn-outline-secondary">Edit</a>
-                                <a asp-page="Delete" asp-route-id="@customer.Id" class="btn btn-sm btn-outline-danger">Delete</a>
+                                <div class="table-actions">
+                                    <a asp-page="Details" asp-route-id="@customer.Id" class="btn btn-sm btn-outline-primary">Details</a>
+                                    <a asp-page="Edit" asp-route-id="@customer.Id" class="btn btn-sm btn-outline-secondary">Edit</a>
+                                    <a asp-page="Delete" asp-route-id="@customer.Id" class="btn btn-sm btn-outline-danger">Delete</a>
+                                </div>
                             </td>
                         </tr>
                     }
@@ -81,5 +86,8 @@
 }
 else
 {
-    <div class="alert alert-info mb-0">No customers found.</div>
+    <div class="empty-state">
+        <strong>No customers found.</strong>
+        <div>Try another keyword or add a new customer profile.</div>
+    </div>
 }

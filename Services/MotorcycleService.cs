@@ -67,6 +67,9 @@ public class MotorcycleService : IMotorcycleService
         var registrationNo = string.IsNullOrWhiteSpace(request.RegistrationNo)
             ? null
             : request.RegistrationNo.Trim();
+        var imageUrl = string.IsNullOrWhiteSpace(request.ImageUrl)
+            ? null
+            : request.ImageUrl.Trim();
         if (registrationNo != null && await _motorcycleRepo.ExistsByRegistrationNoAsync(registrationNo))
             throw new InvalidOperationException("Registration number already exists in the system.");
 
@@ -83,6 +86,7 @@ public class MotorcycleService : IMotorcycleService
             Color = request.Color.Trim(),
             Mileage = request.Mileage,
             RegistrationNo = registrationNo,
+            ImageUrl = imageUrl,
             Status = MotorcycleStatus.Available,
             IsActive = true,
             CreatedAt = DateTime.UtcNow
@@ -132,13 +136,22 @@ public class MotorcycleService : IMotorcycleService
         }
         else
         {
-            if (request.LicensePlate != null || request.Brand != null || request.Model != null ||
-                request.VehicleTypeId != null)
-                throw new UnauthorizedAccessException("Staff can only edit Color and Mileage.");
+            if (IsChanged(request.LicensePlate, motorcycle.LicensePlate) ||
+                IsChanged(request.Brand, motorcycle.Brand) ||
+                IsChanged(request.Model, motorcycle.Model) ||
+                (request.VehicleTypeId.HasValue && request.VehicleTypeId.Value != motorcycle.VehicleTypeId) ||
+                IsChanged(request.RegistrationNo, motorcycle.RegistrationNo))
+                throw new UnauthorizedAccessException("Staff can only edit Color, Mileage, and Image.");
         }
 
         if (request.Color != null) motorcycle.Color = request.Color.Trim();
         if (request.Mileage.HasValue) motorcycle.Mileage = request.Mileage.Value;
+        if (request.ImageUrl != null)
+        {
+            motorcycle.ImageUrl = string.IsNullOrWhiteSpace(request.ImageUrl)
+                ? null
+                : request.ImageUrl.Trim();
+        }
 
         motorcycle.UpdatedAt = DateTime.UtcNow;
         _motorcycleRepo.Update(motorcycle);
@@ -195,6 +208,7 @@ public class MotorcycleService : IMotorcycleService
         Color = m.Color,
         Mileage = m.Mileage,
         RegistrationNo = m.RegistrationNo,
+        ImageUrl = m.ImageUrl,
         CreatedAt = m.CreatedAt,
         UpdatedAt = m.UpdatedAt
     };
@@ -212,6 +226,7 @@ public class MotorcycleService : IMotorcycleService
         Color = m.Color,
         Mileage = m.Mileage,
         RegistrationNo = m.RegistrationNo,
+        ImageUrl = m.ImageUrl,
         CreatedAt = m.CreatedAt,
         UpdatedAt = m.UpdatedAt,
         RecentRentals = m.RentalContracts.Select(r => new RentalHistoryItem
@@ -225,4 +240,7 @@ public class MotorcycleService : IMotorcycleService
             TotalAmount = r.TotalAmount
         }).ToList()
     };
+
+    private static bool IsChanged(string? incoming, string? current)
+        => incoming is not null && !string.Equals(incoming.Trim(), current ?? string.Empty, StringComparison.OrdinalIgnoreCase);
 }

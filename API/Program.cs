@@ -84,6 +84,7 @@ using (var scope = app.Services.CreateScope())
 {
     var context = scope.ServiceProvider.GetRequiredService<AppDbContext>();
     context.Database.Migrate();
+    await EnsureMotorcycleImageUrlColumnAsync(context);
     await DBSeeder.SeedAsync(context);
 }
 
@@ -98,3 +99,11 @@ app.UseAuthorization();
 app.MapControllers();
 
 app.Run();
+
+static Task EnsureMotorcycleImageUrlColumnAsync(AppDbContext context)
+    => context.Database.ExecuteSqlRawAsync("""
+        IF COL_LENGTH('dbo.Motorcycles', 'ImageUrl') IS NULL
+        BEGIN
+            ALTER TABLE dbo.Motorcycles ADD ImageUrl nvarchar(500) NULL;
+        END
+        """);

@@ -9,10 +9,12 @@ namespace WebUI.Pages.Motorcycle;
 public class IndexModel : PageModel
 {
     private readonly IGoBikeApiClient _apiClient;
+    private readonly IWebHostEnvironment _environment;
 
-    public IndexModel(IGoBikeApiClient apiClient)
+    public IndexModel(IGoBikeApiClient apiClient, IWebHostEnvironment environment)
     {
         _apiClient = apiClient;
+        _environment = environment;
     }
 
     public PaginatedResult<MotorcycleDto> Result { get; set; } = new();
@@ -41,10 +43,20 @@ public class IndexModel : PageModel
             TempData["Error"] = typesError;
     }
 
-    public async Task<IActionResult> OnPostCreateAsync([FromForm] CreateMotorcycleRequest request)
+    public async Task<IActionResult> OnPostCreateAsync([FromForm] CreateMotorcycleRequest request, IFormFile? imageFile)
     {
         if (!User.IsInRole("Admin"))
             return Forbid();
+
+        var (imageUrl, imageError) = await SaveMotorcycleImageAsync(imageFile);
+        if (imageError != null)
+        {
+            TempData["Error"] = imageError;
+            return RedirectToPage();
+        }
+
+        if (imageUrl != null)
+            request.ImageUrl = imageUrl;
 
         var (success, _, error) = await _apiClient.CreateMotorcycleAsync(request);
         TempData[success ? "Success" : "Error"] = success
@@ -53,8 +65,18 @@ public class IndexModel : PageModel
         return RedirectToPage();
     }
 
-    public async Task<IActionResult> OnPostEditAsync(int id, [FromForm] UpdateMotorcycleRequest request)
+    public async Task<IActionResult> OnPostEditAsync(int id, [FromForm] UpdateMotorcycleRequest request, IFormFile? imageFile)
     {
+        var (imageUrl, imageError) = await SaveMotorcycleImageAsync(imageFile);
+        if (imageError != null)
+        {
+            TempData["Error"] = imageError;
+            return RedirectToPage();
+        }
+
+        if (imageUrl != null)
+            request.ImageUrl = imageUrl;
+
         var (success, _, error) = await _apiClient.UpdateMotorcycleAsync(id, request);
         TempData[success ? "Success" : "Error"] = success
             ? "Motorcycle updated successfully!"
@@ -72,5 +94,34 @@ public class IndexModel : PageModel
             ? "Motorcycle deleted successfully!"
             : error ?? "Failed to delete motorcycle.";
         return RedirectToPage();
+    }
+
+    private async Task<(string? ImageUrl, string? Error)> SaveMotorcycleImageAsync(IFormFile? imageFile)
+    {
+        if (imageFile == null || imageFile.Length == 0)
+            return (null, null);
+
+        if (imageFile.Length > 5 * 1024 * 1024)
+            return (null, "Image file must be 5 MB or smaller.");
+
+        var extension = Path.GetExtension(imageFile.FileName).ToLowerInvariant();
+        var allowedExtensions = new HashSet<string>(StringComparer.OrdinalIgnoreCase)
+        {
+            ".jpg", ".jpeg", ".png", ".webp", ".gif"
+        };
+
+        if (!allowedExtensions.Contains(extension))
+            return (null, "Only JPG, PNG, WEBP, and GIF images are allowed.");
+
+        var uploadsFolder = Path.Combine(_environment.WebRootPath, "uploads", "motorcycles");
+        Directory.CreateDirectory(uploadsFolder);
+
+        var fileName = $"{Guid.NewGuid():N}{extension}";
+        var physicalPath = Path.Combine(uploadsFolder, fileName);
+
+        await using var stream = System.IO.File.Create(physicalPath);
+        await imageFile.CopyToAsync(stream);
+
+        return ($"/uploads/motorcycles/{fileName}", null);
     }
 }

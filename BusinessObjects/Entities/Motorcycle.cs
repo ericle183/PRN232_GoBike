@@ -34,6 +34,9 @@ public class Motorcycle
     [MaxLength(20)]
     public string? RegistrationNo { get; set; }
 
+    [MaxLength(500)]
+    public string? ImageUrl { get; set; }
+
     public bool IsActive { get; set; } = true;
 
     public DateTime CreatedAt { get; set; } = DateTime.UtcNow;

@@ -12,8 +12,8 @@ using Microsoft.EntityFrameworkCore.Storage.ValueConversion;
 namespace DataAccessObjects.Migrations
 {
     [DbContext(typeof(AppDbContext))]
-    [Migration("20260625030621_RequirementV1Database")]
-    partial class RequirementV1Database
+    [Migration("20260627085613_tenmigration")]
+    partial class tenmigration
     {
         /// <inheritdoc />
         protected override void BuildTargetModel(ModelBuilder modelBuilder)

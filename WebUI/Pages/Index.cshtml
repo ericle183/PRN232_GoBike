@@ -1,29 +1,62 @@
-﻿@page
+@page
 @using WebUI.Helpers
 @model IndexModel
 @{
-    ViewData["Title"] = "Trang chủ";
-    if (User.Identity?.IsAuthenticated == true)
-    {
-        Layout = AuthorizationHelper.GetLayoutPath(User) == "_LayoutAdmin"
-            ? "/Views/Shared/_LayoutAdmin.cshtml"
-            : "/Views/Shared/_LayoutStaff.cshtml";
-    }
+    ViewData["Title"] = "Dashboard";
 }
 
-<div class="text-center">
-    <h1 class="display-4">Chào mừng đến GoBike</h1>
-    @if (User.Identity?.IsAuthenticated == true)
-    {
-        <p class="lead">Xin chào, <strong>@User.FindFirst(System.Security.Claims.ClaimTypes.GivenName)?.Value</strong>!</p>
+@if (User.Identity?.IsAuthenticated == true)
+{
+    var name = User.FindFirst(System.Security.Claims.ClaimTypes.GivenName)?.Value
+        ?? User.Identity?.Name
+        ?? "there";
+
+    <section class="hero-panel mb-4">
+        <div class="page-heading mb-0">
+            <div>
+                <div class="page-kicker">Today at the rental desk</div>
+                <h1>Welcome back, @name</h1>
+                <p class="page-subtitle">Manage customers, motorcycles, and rental workflows from one place.</p>
+            </div>
+            <div class="d-flex flex-wrap gap-2">
+                <a class="btn btn-primary" asp-page="/Rentals/Create">New rental</a>
+                <a class="btn btn-soft" asp-page="/Customers/Create">Add customer</a>
+            </div>
+        </div>
+    </section>
+
+    <section class="stat-grid mb-4">
+        <a class="stat-card" asp-page="/Rentals/Index">
+            <div class="stat-label">Rental workflow</div>
+            <div class="stat-value">Contracts</div>
+            <div class="text-muted small">Reserve, hand over, complete, cancel.</div>
+        </a>
+        <a class="stat-card" asp-page="/Motorcycle/Index">
+            <div class="stat-label">Fleet</div>
+            <div class="stat-value">Motorcycles</div>
+            <div class="text-muted small">Track availability, mileage, and status.</div>
+        </a>
+        <a class="stat-card" asp-page="/Customers/Index">
+            <div class="stat-label">Customers</div>
+            <div class="stat-value">Profiles</div>
+            <div class="text-muted small">Manage identity, phone, and license details.</div>
+        </a>
         @if (AuthorizationHelper.IsAdmin(User))
         {
-            <a class="btn btn-primary" asp-page="/Admin/Staff/Index">Quản lý nhân viên</a>
+            <a class="stat-card" asp-page="/Admin/Staff/Index">
+                <div class="stat-label">Admin</div>
+                <div class="stat-value">Staff</div>
+                <div class="text-muted small">Create and manage staff accounts.</div>
+            </a>
         }
-    }
-    else
-    {
-        <p class="text-muted">Vui lòng đăng nhập để sử dụng hệ thống.</p>
-        <a class="btn btn-primary" asp-page="/Account/Login">Đăng nhập</a>
-    }
-</div>
+    </section>
+}
+else
+{
+    <section class="hero-panel mx-auto" style="max-width: 760px;">
+        <div class="page-kicker">GoBike</div>
+        <h1 class="mb-2">Motorcycle rental operations</h1>
+        <p class="page-subtitle mb-4">Sign in to manage customers, rentals, inspections, payments, and fleet status.</p>
+        <a class="btn btn-primary" asp-page="/Account/Login">Login</a>
+    </section>
+}

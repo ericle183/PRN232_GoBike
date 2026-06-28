@@ -13,35 +13,23 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
     <title>@ViewData["Title"] - GoBike</title>
     <link rel="stylesheet" href="~/lib/bootstrap/dist/css/bootstrap.min.css" />
-    <style>
-        body {
-            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
-            min-height: 100vh;
-            display: flex;
-            align-items: center;
-            justify-content: center;
-        }
-        .login-container {
-            background: white;
-            border-radius: 10px;
-            box-shadow: 0 10px 25px rgba(0, 0, 0, 0.2);
-        }
-    </style>
+    <link rel="stylesheet" href="~/css/site.css" asp-append-version="true" />
 </head>
-<body>
+<body class="login-page">
     <div class="container">
         <div class="row justify-content-center">
-            <div class="col-md-5">
+            <div class="col-sm-10 col-md-6 col-lg-5 col-xl-4">
                 <div class="login-container p-5">
-                    <h2 class="text-center mb-4">
-                        <strong>GoBike</strong><br>
-                        <small class="text-muted">Motorcycle Rental System</small>
-                    </h2>
+                    <div class="text-center mb-4">
+                        <div class="brand-mark mx-auto mb-3">G</div>
+                        <h1 class="h3 fw-bold mb-1">GoBike</h1>
+                        <p class="text-muted mb-0">Motorcycle rental operations</p>
+                    </div>
 
                     @if (!string.IsNullOrEmpty(Model.ErrorMessage))
                     {
                         <div class="alert alert-danger alert-dismissible fade show" role="alert">
-                            <i class="bi bi-exclamation-circle"></i> @Model.ErrorMessage
+                            @Model.ErrorMessage
                             <button type="button" class="btn-close" data-bs-dismiss="alert" aria-label="Close"></button>
                         </div>
                     }
@@ -50,27 +38,23 @@
                         <div class="mb-3">
                             <label for="Input_Username" class="form-label">Username</label>
                             <div class="input-group">
-                                <span class="input-group-text">👤</span>
+                                <span class="input-group-text">User</span>
                                 <input type="text" class="form-control" id="Input_Username" asp-for="Input.Username" placeholder="Enter your username" required>
                             </div>
                         </div>
 
-                        <div class="mb-3">
+                        <div class="mb-4">
                             <label for="Input_Password" class="form-label">Password</label>
                             <div class="input-group">
-                                <span class="input-group-text">🔐</span>
+                                <span class="input-group-text">Key</span>
                                 <input type="password" class="form-control" id="Input_Password" asp-for="Input.Password" placeholder="Enter your password" required>
                             </div>
                         </div>
 
                         <div class="d-grid">
-                            <button type="submit" class="btn btn-primary btn-lg">
-                                Login
-                            </button>
+                            <button type="submit" class="btn btn-primary btn-lg">Login</button>
                         </div>
                     </form>
-
-                    <hr>
                 </div>
             </div>
         </div>

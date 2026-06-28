@@ -29,4 +29,7 @@ public class CreateMotorcycleRequest
 
     [MaxLength(20)]
     public string? RegistrationNo { get; set; }
+
+    [MaxLength(500)]
+    public string? ImageUrl { get; set; }
 }

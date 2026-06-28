@@ -1,4 +1,19 @@
-﻿<!DOCTYPE html>
+@{
+    var currentPath = Context.Request.Path.ToString().ToLowerInvariant();
+    var isAdmin = User.IsInRole("Admin");
+    var isStaff = User.IsInRole("Staff");
+    var displayName = User.FindFirst(System.Security.Claims.ClaimTypes.GivenName)?.Value
+        ?? User.Identity?.Name
+        ?? "User";
+    var roleLabel = isAdmin ? "ADMIN" : isStaff ? "STAFF" : null;
+    var roleClass = isAdmin ? "admin" : "";
+    var footerText = isAdmin
+        ? "Internal motorcycle rental operations"
+        : isStaff
+            ? "Rental desk operations"
+            : "Motorcycle rental system";
+}
+<!DOCTYPE html>
 <html lang="en">
 <head>
     <meta charset="utf-8" />
@@ -10,75 +25,83 @@
     <link rel="stylesheet" href="~/WebUI.styles.css" asp-append-version="true" />
 </head>
 <body>
-    <header>
-        <nav class="navbar navbar-expand-sm navbar-toggleable-sm navbar-dark bg-dark border-bottom box-shadow mb-3">
-            <div class="container">
-                <a class="navbar-brand" href="/Index">
-                    <strong>GoBike</strong>
-                </a>
-                <button class="navbar-toggler" type="button" data-bs-toggle="collapse" data-bs-target=".navbar-collapse" aria-controls="navbarSupportedContent"
-                        aria-expanded="false" aria-label="Toggle navigation">
-                    <span class="navbar-toggler-icon"></span>
-                </button>
-                <div class="navbar-collapse collapse d-sm-inline-flex justify-content-between">
-                    <ul class="navbar-nav flex-grow-1">
-                        <li class="nav-item">
-                            <a class="nav-link text-light" asp-area="" asp-page="/Index">Home</a>
-                        </li>
-                        <li class="nav-item">
-                            <a class="nav-link text-light" asp-area="" asp-page="/Privacy">Privacy</a>
-                        </li>
-                    </ul>
-
-                    <!-- User Section -->
-                    <ul class="navbar-nav">
-                        @if (User.Identity?.IsAuthenticated == true)
+    <div class="app-shell">
+        <header>
+            <nav class="navbar navbar-expand-lg app-navbar">
+                <div class="container-fluid px-3 px-lg-4">
+                    <a class="navbar-brand d-flex align-items-center gap-2" asp-area="" asp-page="/Index">
+                        <span class="brand-mark">G</span>
+                        <span class="brand-lockup">GoBike</span>
+                        @if (!string.IsNullOrEmpty(roleLabel))
                         {
-                            <!-- User is logged in -->
-                            <li class="nav-item dropdown">
-                                <a class="nav-link text-light dropdown-toggle" href="#" id="userDropdown" role="button" data-bs-toggle="dropdown" aria-expanded="false">
-                                    @User.FindFirst(System.Security.Claims.ClaimTypes.Name)?.Value
-                                </a>
-                                <ul class="dropdown-menu dropdown-menu-end" aria-labelledby="userDropdown">
-                                    <li>
-                                        <a class="dropdown-item" asp-page="/Account/Profile">
-                                            Profile
-                                        </a>
-                                    </li>
-                                    <li><hr class="dropdown-divider"></li>
-                                    <li>
-                                        <a class="dropdown-item" href="/Account/Logout">
-                                            Logout
-                                        </a>
-                                    </li>
-                                </ul>
-                            </li>
+                            <span class="role-badge @roleClass">@roleLabel</span>
                         }
-                        else
-                        {
-                            <!-- User is not logged in -->
+                    </a>
+                    <button class="navbar-toggler" type="button" data-bs-toggle="collapse" data-bs-target="#mainNavbar" aria-controls="mainNavbar"
+                            aria-expanded="false" aria-label="Toggle navigation">
+                        <span class="navbar-toggler-icon"></span>
+                    </button>
+                    <div class="collapse navbar-collapse" id="mainNavbar">
+                        <ul class="navbar-nav ms-auto align-items-lg-center gap-lg-1">
                             <li class="nav-item">
-                                <a class="nav-link btn btn-primary text-light" asp-page="/Account/Login">
-                                    Login
-                                </a>
+                                <a class="nav-link @(currentPath == "/" || currentPath.StartsWith("/index") ? "active" : "")" asp-area="" asp-page="/Index">Dashboard</a>
                             </li>
-                        }
-                    </ul>
+                            @if (isAdmin)
+                            {
+                                <li class="nav-item">
+                                    <a class="nav-link @(currentPath.StartsWith("/admin/staff") ? "active" : "")" href="/Admin/Staff">Staff</a>
+                                </li>
+                            }
+                            @if (isAdmin || isStaff)
+                            {
+                                <li class="nav-item">
+                                    <a class="nav-link @(currentPath.StartsWith("/motorcycle") ? "active" : "")" href="/Motorcycle">Motorcycles</a>
+                                </li>
+                                <li class="nav-item">
+                                    <a class="nav-link @(currentPath.StartsWith("/customers") ? "active" : "")" href="/Customers">Customers</a>
+                                </li>
+                                <li class="nav-item">
+                                    <a class="nav-link @(currentPath.StartsWith("/rentals") ? "active" : "")" href="/Rentals">Rentals</a>
+                                </li>
+                            }
+                            @if (User.Identity?.IsAuthenticated == true)
+                            {
+                                <li class="nav-item dropdown">
+                                    <a class="nav-link dropdown-toggle" href="#" id="userDropdown" role="button" data-bs-toggle="dropdown" aria-expanded="false">
+                                        @displayName
+                                    </a>
+                                    <ul class="dropdown-menu dropdown-menu-end">
+                                        <li><a class="dropdown-item" href="/Account/Profile">Profile</a></li>
+                                        <li><hr class="dropdown-divider"></li>
+                                        <li><a class="dropdown-item" href="/Account/Logout">Logout</a></li>
+                                    </ul>
+                                </li>
+                            }
+                            else
+                            {
+                                <li class="nav-item">
+                                    <a class="btn btn-primary" asp-page="/Account/Login">Login</a>
+                                </li>
+                            }
+                        </ul>
+                    </div>
                 </div>
-            </div>
-        </nav>
-    </header>
-    <div class="container">
-        <main role="main" class="pb-3">
-            @RenderBody()
-        </main>
-    </div>
+            </nav>
+        </header>
 
-    <footer class="border-top footer text-muted">
-        <div class="container">
-            &copy; 2026 - GoBike - <a asp-area="" asp-page="/Privacy">Privacy</a>
-        </div>
-    </footer>
+        <main class="app-main">
+            <div class="container-fluid px-3 px-lg-4">
+                @RenderBody()
+            </div>
+        </main>
+
+        <footer class="app-footer py-3">
+            <div class="container-fluid px-3 px-lg-4 d-flex flex-column flex-sm-row justify-content-between gap-2 small">
+                <span>&copy; 2026 GoBike</span>
+                <span>@footerText</span>
+            </div>
+        </footer>
+    </div>
 
     <script src="~/lib/jquery/dist/jquery.min.js"></script>
     <script src="~/lib/bootstrap/dist/js/bootstrap.bundle.min.js"></script>

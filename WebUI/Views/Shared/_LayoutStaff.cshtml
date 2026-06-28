@@ -1,3 +1,9 @@
+@{
+    var currentPath = Context.Request.Path.ToString().ToLowerInvariant();
+    var displayName = User.FindFirst(System.Security.Claims.ClaimTypes.GivenName)?.Value
+        ?? User.Identity?.Name
+        ?? "Staff";
+}
 <!DOCTYPE html>
 <html lang="en">
 <head>
@@ -8,49 +14,59 @@
     <link rel="stylesheet" href="~/css/site.css" asp-append-version="true" />
 </head>
 <body>
-    <nav class="navbar navbar-expand-lg navbar-dark bg-secondary">
-        <div class="container-fluid">
-            <a class="navbar-brand" href="/">
-                <strong>GoBike</strong> <span class="badge bg-info text-dark">STAFF</span>
-            </a>
-            <button class="navbar-toggler" type="button" data-bs-toggle="collapse" data-bs-target="#navbarNav">
-                <span class="navbar-toggler-icon"></span>
-            </button>
-            <div class="collapse navbar-collapse" id="navbarNav">
-                <ul class="navbar-nav ms-auto">
-                    <li class="nav-item">
-                        <a class="nav-link" href="/Motorcycle">Motorcycles</a>
-                    </li>
-                    <li class="nav-item">
-                        <a class="nav-link" href="/Customers">Customers</a>
-                    </li>
-                    <li class="nav-item">
-                        <a class="nav-link" href="/Rentals">Rentals</a>
-                    </li>
-                    <li class="nav-item dropdown">
-                        <a class="nav-link dropdown-toggle" href="#" id="userDropdown" role="button" data-bs-toggle="dropdown">
-                            @User.FindFirst(System.Security.Claims.ClaimTypes.GivenName)?.Value
-                        </a>
-                        <ul class="dropdown-menu dropdown-menu-end">
-                            <li><a class="dropdown-item" href="/Account/Profile">Profile</a></li>
-                            <li><hr class="dropdown-divider"></li>
-                            <li><a class="dropdown-item" href="/Account/Logout">Logout</a></li>
-                        </ul>
-                    </li>
-                </ul>
+    <div class="app-shell">
+        <nav class="navbar navbar-expand-lg app-navbar">
+            <div class="container-fluid px-3 px-lg-4">
+                <a class="navbar-brand d-flex align-items-center gap-2" href="/Index">
+                    <span class="brand-mark">G</span>
+                    <span class="brand-lockup">GoBike</span>
+                    <span class="role-badge">STAFF</span>
+                </a>
+                <button class="navbar-toggler" type="button" data-bs-toggle="collapse" data-bs-target="#navbarNav" aria-controls="navbarNav" aria-expanded="false" aria-label="Toggle navigation">
+                    <span class="navbar-toggler-icon"></span>
+                </button>
+                <div class="collapse navbar-collapse" id="navbarNav">
+                    <ul class="navbar-nav ms-auto align-items-lg-center gap-lg-1">
+                        <li class="nav-item">
+                            <a class="nav-link @(currentPath == "/" || currentPath.StartsWith("/index") ? "active" : "")" href="/Index">Dashboard</a>
+                        </li>
+                        <li class="nav-item">
+                            <a class="nav-link @(currentPath.StartsWith("/motorcycle") ? "active" : "")" href="/Motorcycle">Motorcycles</a>
+                        </li>
+                        <li class="nav-item">
+                            <a class="nav-link @(currentPath.StartsWith("/customers") ? "active" : "")" href="/Customers">Customers</a>
+                        </li>
+                        <li class="nav-item">
+                            <a class="nav-link @(currentPath.StartsWith("/rentals") ? "active" : "")" href="/Rentals">Rentals</a>
+                        </li>
+                        <li class="nav-item dropdown">
+                            <a class="nav-link dropdown-toggle" href="#" id="userDropdown" role="button" data-bs-toggle="dropdown" aria-expanded="false">
+                                @displayName
+                            </a>
+                            <ul class="dropdown-menu dropdown-menu-end">
+                                <li><a class="dropdown-item" href="/Account/Profile">Profile</a></li>
+                                <li><hr class="dropdown-divider"></li>
+                                <li><a class="dropdown-item" href="/Account/Logout">Logout</a></li>
+                            </ul>
+                        </li>
+                    </ul>
+                </div>
             </div>
-        </div>
-    </nav>
+        </nav>
 
-    <main class="py-4">
-        <div class="container">
-            @RenderBody()
-        </div>
-    </main>
+        <main class="app-main">
+            <div class="container-fluid px-3 px-lg-4">
+                @RenderBody()
+            </div>
+        </main>
 
-    <footer class="bg-dark text-white text-center py-3 mt-5">
-        <p>&copy; 2026 GoBike. All rights reserved.</p>
-    </footer>
+        <footer class="app-footer py-3">
+            <div class="container-fluid px-3 px-lg-4 d-flex flex-column flex-sm-row justify-content-between gap-2 small">
+                <span>&copy; 2026 GoBike</span>
+                <span>Rental desk operations</span>
+            </div>
+        </footer>
+    </div>
 
     <script src="~/lib/bootstrap/dist/js/bootstrap.bundle.min.js"></script>
     <script src="~/js/site.js" asp-append-version="true"></script>

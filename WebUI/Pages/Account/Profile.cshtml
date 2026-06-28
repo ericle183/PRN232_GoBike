@@ -1,11 +1,7 @@
 @page
-@using WebUI.Helpers
 @model WebUI.Pages.Account.ProfileModel
 @{
     ViewData["Title"] = "User Profile";
-    Layout = AuthorizationHelper.GetLayoutPath(User) == "_LayoutAdmin"
-        ? "/Views/Shared/_LayoutAdmin.cshtml"
-        : "/Views/Shared/_LayoutStaff.cshtml";
 }
 
 <div class="container mt-5">

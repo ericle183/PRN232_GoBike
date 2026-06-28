@@ -121,7 +121,7 @@ public class GoBikeApiClient : IGoBikeApiClient
         decimal? minPrice,
         decimal? maxPrice,
         int pageNumber,
-        int pageSize = 10)
+        int pageSize = 20)
     {
         var query = $"api/motorcycles?page={pageNumber}&pageSize={pageSize}";
         if (!string.IsNullOrWhiteSpace(search))
