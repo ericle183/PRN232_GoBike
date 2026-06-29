@@ -28,7 +28,7 @@ public class CustomerCreateDto
     [Required]
     public DateTime DateOfBirth { get; set; }
 
-    [Required]
+    [Required(ErrorMessage = "Driver license is required")]
     [MaxLength(20)]
     public string DriverLicenseNo { get; set; } = string.Empty;
 }

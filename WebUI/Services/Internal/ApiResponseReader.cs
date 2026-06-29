@@ -20,6 +20,26 @@ internal static class ApiResponseReader
                     return text;
             }
 
+            if (doc.RootElement.TryGetProperty("errors", out var errors) &&
+                errors.ValueKind == JsonValueKind.Object)
+            {
+                var messages = new List<string>();
+                foreach (var property in errors.EnumerateObject())
+                {
+                    if (property.Value.ValueKind != JsonValueKind.Array) continue;
+
+                    foreach (var item in property.Value.EnumerateArray())
+                    {
+                        var text = item.GetString();
+                        if (!string.IsNullOrWhiteSpace(text))
+                            messages.Add($"{property.Name}: {text}");
+                    }
+                }
+
+                if (messages.Count > 0)
+                    return string.Join(" ", messages);
+            }
+
             if (doc.RootElement.TryGetProperty("title", out var title))
             {
                 var text = title.GetString();

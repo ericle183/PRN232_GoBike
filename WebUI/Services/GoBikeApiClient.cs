@@ -40,7 +40,20 @@ public class GoBikeApiClient : IGoBikeApiClient
         var handler = new HttpClientHandler { UseCookies = true, CookieContainer = new CookieContainer() };
         using var loginClient = new HttpClient(handler) { BaseAddress = baseUri };
 
-        var response = await loginClient.PostAsJsonAsync("api/auth/login", request, JsonOptions);
+        HttpResponseMessage response;
+        try
+        {
+            response = await loginClient.PostAsJsonAsync("api/auth/login", request, JsonOptions);
+        }
+        catch (HttpRequestException)
+        {
+            return (false, null, $"Không kết nối được API tại {apiSettings.BaseUrl}. Hãy chạy project API trước, hoặc chỉnh ApiSettings:BaseUrl theo đúng port API đang chạy.");
+        }
+        catch (TaskCanceledException)
+        {
+            return (false, null, $"API tại {apiSettings.BaseUrl} phản hồi quá lâu. Hãy kiểm tra project API có đang chạy ổn không.");
+        }
+
         if (!response.IsSuccessStatusCode)
             return (false, null, await ApiResponseReader.ReadErrorMessageAsync(response));
 

@@ -59,7 +59,7 @@ public class CustomerDetail
     public string Email { get; set; } = "";
     public string? Address { get; set; }
     public DateTime DateOfBirth { get; set; }
-    public string? DriverLicenseNo { get; set; }
+    public string DriverLicenseNo { get; set; } = "";
     public DateTime CreatedAt { get; set; }
 }
 

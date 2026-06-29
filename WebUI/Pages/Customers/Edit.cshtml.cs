@@ -3,6 +3,7 @@ using System.Net.Http.Json;
 using System.Text.Json;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.AspNetCore.Mvc.RazorPages;
+using WebUI.Services.Internal;
 
 namespace WebUI.Pages.Customers;
 
@@ -64,7 +65,7 @@ public class EditModel : PageModel
 
         if (!response.IsSuccessStatusCode)
         {
-            ModelState.AddModelError(string.Empty, "Failed to update customer. Please check your input.");
+            ModelState.AddModelError(string.Empty, await ApiResponseReader.ReadErrorMessageAsync(response));
             CustomerId = id;
             return Page();
         }

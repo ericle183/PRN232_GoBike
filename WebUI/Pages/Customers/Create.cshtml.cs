@@ -2,6 +2,7 @@ using System.ComponentModel.DataAnnotations;
 using System.Net.Http.Json;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.AspNetCore.Mvc.RazorPages;
+using WebUI.Services.Internal;
 
 namespace WebUI.Pages.Customers;
 
@@ -34,8 +35,7 @@ public class CreateModel : PageModel
 
         if (!response.IsSuccessStatusCode)
         {
-            var errorContent = await response.Content.ReadAsStringAsync();
-            ModelState.AddModelError(string.Empty, "Failed to create customer. Please check your input.");
+            ModelState.AddModelError(string.Empty, await ApiResponseReader.ReadErrorMessageAsync(response));
             return Page();
         }
 
@@ -66,5 +66,7 @@ public class CustomerCreateForm
     [Required(ErrorMessage = "Date of birth is required.")]
     public DateTime DateOfBirth { get; set; }
 
-    public string? DriverLicenseNo { get; set; }
+    [Required(ErrorMessage = "Driver license is required.")]
+    [StringLength(20, ErrorMessage = "Driver license must be 20 characters or fewer.")]
+    public string DriverLicenseNo { get; set; } = "";
 }

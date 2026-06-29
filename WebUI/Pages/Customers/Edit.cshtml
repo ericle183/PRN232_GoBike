@@ -64,8 +64,11 @@
                     </div>
 
                     <div class="mb-3">
-                        <label class="form-label fw-bold" for="DriverLicenseNo">Driver License</label>
+                        <label class="form-label fw-bold" for="DriverLicenseNo">
+                            Driver License <span style="color: #EF4444;">*</span>
+                        </label>
                         <input class="form-control" id="DriverLicenseNo" asp-for="Form.DriverLicenseNo" />
+                        <span asp-validation-for="Form.DriverLicenseNo" class="text-danger"></span>
                     </div>
                 </div>
             </div>
