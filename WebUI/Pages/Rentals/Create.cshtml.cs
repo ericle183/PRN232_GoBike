@@ -75,12 +75,21 @@ public class CreateModel : PageModel
             return await OnGetAsync();
         }
 
+        if (!Form.DepositConfirmed)
+        {
+            ModelState.AddModelError("Form.DepositConfirmed", "Deposit must be collected before creating a reservation.");
+            return await OnGetAsync();
+        }
+
         var payload = new
         {
             customerId = Form.CustomerId,
             motorcycleId = Form.MotorcycleId,
             startDate = Form.RentalDate.ToString("yyyy-MM-dd"),
             endDate = Form.ExpectedReturnDate.ToString("yyyy-MM-dd"),
+            depositConfirmed = Form.DepositConfirmed,
+            depositPaymentMethod = Form.DepositPaymentMethod,
+            depositPaymentNote = Form.DepositPaymentNote,
             notes = Form.Notes
         };
 
@@ -97,7 +106,7 @@ public class CreateModel : PageModel
         var created = JsonSerializer.Deserialize<RentalCreatedResult>(resultJson,
             new JsonSerializerOptions { PropertyNameCaseInsensitive = true });
 
-        TempData?["SuccessMessage"] = "Rental reservation created successfully. Admin can confirm the deposit and activate it on the rental date.";
+        TempData?["SuccessMessage"] = "Rental reservation created successfully.";
         return RedirectToPage("./Details", new { id = created?.Id ?? 0 });
     }
 

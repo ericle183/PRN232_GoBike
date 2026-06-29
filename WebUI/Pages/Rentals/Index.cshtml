@@ -12,7 +12,10 @@
     </div>
     @if (User.IsInRole("Admin") || User.IsInRole("Staff"))
     {
-        <a asp-page="Create" class="btn btn-primary">Create reservation</a>
+        <div class="d-flex gap-2">
+            <a asp-page="RentNow" class="btn btn-primary">Rent now</a>
+            <a asp-page="Create" class="btn btn-outline-primary">Create reservation</a>
+        </div>
     }
 </div>
 

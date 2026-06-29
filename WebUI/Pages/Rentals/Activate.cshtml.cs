@@ -6,7 +6,7 @@ using Microsoft.AspNetCore.Mvc.RazorPages;
 
 namespace WebUI.Pages.Rentals;
 
-[Authorize(Roles = "Admin")]
+[Authorize(Roles = "Admin,Staff")]
 public class ActivateModel : PageModel
 {
     private readonly IHttpClientFactory _httpClientFactory;
@@ -40,15 +40,6 @@ public class ActivateModel : PageModel
     [BindProperty]
     public string? InspectionNote { get; set; }
 
-    [BindProperty]
-    public bool DepositConfirmed { get; set; }
-
-    [BindProperty]
-    public int DepositPaymentMethod { get; set; } = 1;
-
-    [BindProperty]
-    public string? DepositPaymentNote { get; set; }
-
     public async Task<IActionResult> OnGetAsync(int id)
     {
         if (!await LoadRentalAsync(id)) return NotFound();
@@ -56,7 +47,6 @@ public class ActivateModel : PageModel
         StartMileage = Rental.StartMileage ?? Rental.MotorcycleMileage ?? 0;
         FuelLevel = "Full";
         VehicleCondition = "Good";
-        DepositPaymentMethod = 1;
 
         return Page();
     }
@@ -91,13 +81,6 @@ public class ActivateModel : PageModel
             return Page();
         }
 
-        if (!DepositConfirmed)
-        {
-            ModelState.AddModelError(nameof(DepositConfirmed), "Admin must confirm the deposit before activation.");
-            await LoadRentalAsync(id);
-            return Page();
-        }
-
         var client = _httpClientFactory.CreateClient("GobikeApi");
         var payload = new
         {
@@ -110,10 +93,7 @@ public class ActivateModel : PageModel
                 damageDescription = DamageDescription,
                 accessoriesNote = AccessoriesNote,
                 note = InspectionNote
-            },
-            depositConfirmed = DepositConfirmed,
-            depositPaymentMethod = DepositPaymentMethod,
-            depositPaymentNote = DepositPaymentNote
+            }
         };
 
         var response = await client.PostAsJsonAsync($"/api/rental-contracts/{id}/handover", payload);

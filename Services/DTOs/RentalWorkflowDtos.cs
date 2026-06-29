@@ -45,6 +45,13 @@ public class ReserveRentalRequestDto
     [Required]
     public DateTime EndDate { get; set; }
 
+    public bool DepositConfirmed { get; set; }
+
+    public PaymentMethod DepositPaymentMethod { get; set; }
+
+    [MaxLength(500)]
+    public string? DepositPaymentNote { get; set; }
+
     [MaxLength(500)]
     public string? Notes { get; set; }
 }
@@ -53,26 +60,12 @@ public class RentNowRequestDto : ReserveRentalRequestDto
 {
     [Required]
     public RentalInspectionRequestDto BeforeInspection { get; set; } = new();
-
-    public bool DepositConfirmed { get; set; }
-
-    public PaymentMethod DepositPaymentMethod { get; set; }
-
-    [MaxLength(500)]
-    public string? DepositPaymentNote { get; set; }
 }
 
 public class HandoverRentalRequestDto
 {
     [Required]
     public RentalInspectionRequestDto BeforeInspection { get; set; } = new();
-
-    public bool DepositConfirmed { get; set; }
-
-    public PaymentMethod DepositPaymentMethod { get; set; }
-
-    [MaxLength(500)]
-    public string? DepositPaymentNote { get; set; }
 }
 
 public class CompleteRentalRequestDto

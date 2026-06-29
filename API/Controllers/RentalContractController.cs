@@ -85,7 +85,6 @@ public class RentalContractController : ControllerBase
         });
 
     [HttpPost("{id:int}/handover")]
-    [Authorize(Roles = "Admin")]
     public async Task<ActionResult<RentalContractDetailDto>> Handover(int id, [FromBody] HandoverRentalRequestDto request)
         => await ExecuteWorkflowAsync(async () =>
         {
@@ -94,7 +93,6 @@ public class RentalContractController : ControllerBase
         });
 
     [HttpPost("{id:int}/complete")]
-    [Authorize(Roles = "Admin")]
     public async Task<ActionResult<RentalContractDetailDto>> Complete(int id, [FromBody] CompleteRentalRequestDto request)
         => await ExecuteWorkflowAsync(async () =>
         {
@@ -103,7 +101,6 @@ public class RentalContractController : ControllerBase
         });
 
     [HttpPost("{id:int}/cancel")]
-    [Authorize(Roles = "Admin")]
     public async Task<ActionResult<RentalContractDetailDto>> Cancel(int id, [FromBody] CancelRentalRequestDto request)
         => await ExecuteWorkflowAsync(async () =>
         {
@@ -112,7 +109,6 @@ public class RentalContractController : ControllerBase
         });
 
     [HttpPost("{id:int}/no-show")]
-    [Authorize(Roles = "Admin")]
     public async Task<ActionResult<RentalContractDetailDto>> MarkNoShow(int id, [FromBody] NoShowRentalRequestDto request)
         => await ExecuteWorkflowAsync(async () =>
         {

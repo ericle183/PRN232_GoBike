@@ -28,6 +28,8 @@ public class RentalContractService : IRentalContractService
 
     public async Task<RentalContract> ReserveAsync(ReserveRentalRequestDto request, int? userId)
     {
+        ValidateDepositConfirmation(request.DepositConfirmed);
+        ValidatePaymentMethod(request.DepositPaymentMethod, nameof(request.DepositPaymentMethod));
         ValidateDateRange(request.StartDate, request.EndDate);
         ValidateAdvanceBookingLimit(request.StartDate);
 
@@ -45,6 +47,8 @@ public class RentalContractService : IRentalContractService
         context.RentalContracts.Add(contract);
         await context.SaveChangesAsync();
 
+        context.RentalPayments.Add(CreatePayment(contract.Id, PaymentType.Deposit, contract.DepositAmount, request.DepositPaymentMethod, request.DepositPaymentNote, userId));
+        await context.SaveChangesAsync();
         await transaction.CommitAsync();
 
         return await LoadContractAsync(contract.Id) ?? contract;
@@ -83,8 +87,6 @@ public class RentalContractService : IRentalContractService
 
     public async Task<RentalContract> HandoverAsync(int id, HandoverRentalRequestDto request, int? userId)
     {
-        ValidateDepositConfirmation(request.DepositConfirmed);
-        ValidatePaymentMethod(request.DepositPaymentMethod, nameof(request.DepositPaymentMethod));
         ValidateInspection(request.BeforeInspection);
 
         await using var transaction = await context.Database.BeginTransactionAsync();
@@ -103,8 +105,8 @@ public class RentalContractService : IRentalContractService
         if (contract.Inspections.Any(i => i.InspectionType == InspectionType.BeforeRental))
             throw new InvalidOperationException("BeforeRental inspection already exists");
 
-        if (contract.Payments.Any(p => p.PaymentType == PaymentType.Deposit))
-            throw new InvalidOperationException("Deposit payment already exists");
+        if (!contract.Payments.Any(p => p.PaymentType == PaymentType.Deposit))
+            throw new InvalidOperationException("Deposit payment is required before handover");
 
         contract.Status = RentalStatus.Active;
         contract.UpdatedAt = DateTime.UtcNow;
@@ -115,7 +117,6 @@ public class RentalContractService : IRentalContractService
         contract.Motorcycle.UpdatedAt = DateTime.UtcNow;
 
         context.RentalInspections.Add(CreateInspection(contract.Id, InspectionType.BeforeRental, request.BeforeInspection, userId));
-        context.RentalPayments.Add(CreatePayment(contract.Id, PaymentType.Deposit, contract.DepositAmount, request.DepositPaymentMethod, request.DepositPaymentNote, userId));
         await context.SaveChangesAsync();
         await transaction.CommitAsync();
 
@@ -371,7 +372,7 @@ public class RentalContractService : IRentalContractService
     private static void ValidateDepositConfirmation(bool depositConfirmed)
     {
         if (!depositConfirmed)
-            throw new InvalidOperationException("Deposit must be collected before activating a contract");
+            throw new InvalidOperationException("Deposit must be collected before creating or activating a contract");
     }
 
     private static void ValidateMotorcycleAvailable(Motorcycle motorcycle)

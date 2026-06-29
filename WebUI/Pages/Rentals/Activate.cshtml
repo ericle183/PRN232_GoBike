@@ -32,36 +32,6 @@
             <div class="row">
                 <div class="col-md-4">
                     <div class="mb-3">
-                        <label class="form-label fw-bold" for="DepositPaymentMethod">
-                            Deposit Payment Method <span style="color: #EF4444;">*</span>
-                        </label>
-                        <select class="form-select" id="DepositPaymentMethod" asp-for="DepositPaymentMethod">
-                            <option value="1">Cash</option>
-                            <option value="2">Bank Transfer</option>
-                        </select>
-                    </div>
-                </div>
-                <div class="col-md-8">
-                    <div class="mb-3">
-                        <label class="form-label fw-bold" for="DepositPaymentNote">Deposit Payment Note</label>
-                        <input class="form-control" id="DepositPaymentNote" asp-for="DepositPaymentNote"
-                               placeholder="Receipt code, transfer note..." />
-                    </div>
-                </div>
-            </div>
-
-            <div class="form-check mb-4">
-                <input class="form-check-input" id="DepositConfirmed" asp-for="DepositConfirmed" />
-                <label class="form-check-label fw-bold" for="DepositConfirmed">
-                    Deposit has been received <span style="color: #EF4444;">*</span>
-                </label>
-                <div class="form-text">Only Admin should check this after confirming the customer deposit.</div>
-                <span asp-validation-for="DepositConfirmed" class="text-danger"></span>
-            </div>
-
-            <div class="row">
-                <div class="col-md-4">
-                    <div class="mb-3">
                         <label class="form-label fw-bold" for="StartMileage">
                             Start Mileage (km) <span style="color: #EF4444;">*</span>
                         </label>

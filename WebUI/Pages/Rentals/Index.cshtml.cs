@@ -89,8 +89,9 @@ public class IndexModel : PageModel
     {
         2 => "badge-success",
         1 => "badge-warning",
-        3 => "badge-neutral",
-        4 => "badge-error",
+        3 => "badge-completed",
+        4 => "badge-cancelled",
+        5 => "badge-noshow",
         _ => "badge-info"
     };
 

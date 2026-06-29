@@ -67,7 +67,21 @@ public class RentalCreateForm
     public int MotorcycleId { get; set; }
     public DateTime RentalDate { get; set; } = DateTime.Today;
     public DateTime ExpectedReturnDate { get; set; } = DateTime.Today.AddDays(1);
+    public bool DepositConfirmed { get; set; }
+    public int DepositPaymentMethod { get; set; } = 1;
+    public string? DepositPaymentNote { get; set; }
     public string? Notes { get; set; }
+}
+
+public class RentalRentNowForm : RentalCreateForm
+{
+    public int StartMileage { get; set; }
+    public string FuelLevel { get; set; } = "Full";
+    public string VehicleCondition { get; set; } = "Good";
+    public bool HasDamage { get; set; }
+    public string? DamageDescription { get; set; }
+    public string? AccessoriesNote { get; set; }
+    public string? InspectionNote { get; set; }
 }
 
 public class RentalCreatedResult

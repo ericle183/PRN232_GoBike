@@ -1,14 +1,14 @@
 @page
-@model WebUI.Pages.Rentals.CreateModel
+@model WebUI.Pages.Rentals.RentNowModel
 @{
-    ViewData["Title"] = "Rentals / Create";
+    ViewData["Title"] = "Rentals / Rent Now";
 }
 
 <div class="page-heading">
     <div>
-        <div class="page-kicker">Rental workflow</div>
-        <h1>Create Rental Reservation</h1>
-        <p class="page-subtitle">Reserve an available motorcycle after confirming the fixed deposit.</p>
+        <div class="page-kicker">Immediate rental</div>
+        <h1>Rent Now</h1>
+        <p class="page-subtitle">Create an active rental for a customer who is taking the motorcycle immediately.</p>
     </div>
     <a asp-page="Index" class="btn btn-outline-secondary">Back</a>
 </div>
@@ -38,7 +38,7 @@
                         <label class="form-label fw-bold" for="MotorcycleId">
                             Motorcycle <span style="color: #EF4444;">*</span>
                         </label>
-                        <select class="form-select" id="MotorcycleId" asp-for="Form.MotorcycleId" onchange="updateDailyRate()">
+                        <select class="form-select" id="MotorcycleId" asp-for="Form.MotorcycleId" onchange="updateMotorcycleInfo()">
                             <option value="">-- Select Motorcycle --</option>
                             @foreach (var m in Model.AvailableMotorcycles)
                             {
@@ -57,16 +57,6 @@
                         <strong>Daily Rate:</strong> <span id="dailyRateDisplay">-</span> VND<br />
                         <strong>Current Mileage:</strong> <span id="currentMileage">-</span> km
                     </div>
-                </div>
-
-                <div class="col-md-6">
-                    <div class="mb-3">
-                        <label class="form-label fw-bold" for="RentalDate">
-                            Rental Date <span style="color: #EF4444;">*</span>
-                        </label>
-                        <input class="form-control" id="RentalDate" type="date" asp-for="Form.RentalDate" />
-                        <span asp-validation-for="Form.RentalDate" class="text-danger"></span>
-                    </div>
 
                     <div class="mb-3">
                         <label class="form-label fw-bold" for="ExpectedReturnDate">
@@ -75,7 +65,9 @@
                         <input class="form-control" id="ExpectedReturnDate" type="date" asp-for="Form.ExpectedReturnDate" />
                         <span asp-validation-for="Form.ExpectedReturnDate" class="text-danger"></span>
                     </div>
+                </div>
 
+                <div class="col-md-6">
                     <div class="mb-3">
                         <label class="form-label fw-bold" for="DepositPaymentMethod">
                             Deposit Payment Method <span style="color: #EF4444;">*</span>
@@ -100,17 +92,81 @@
                         <div class="form-text">The amount is fixed by the motorcycle type.</div>
                         <span asp-validation-for="Form.DepositConfirmed" class="text-danger"></span>
                     </div>
+
+                    <div class="mb-3">
+                        <label class="form-label fw-bold" for="Notes">Notes</label>
+                        <textarea class="form-control" id="Notes" rows="3" asp-for="Form.Notes"></textarea>
+                    </div>
+                </div>
+            </div>
+
+            <hr />
+
+            <div class="row">
+                <div class="col-md-4">
+                    <div class="mb-3">
+                        <label class="form-label fw-bold" for="StartMileage">
+                            Start Mileage (km) <span style="color: #EF4444;">*</span>
+                        </label>
+                        <input class="form-control" id="StartMileage" type="number" min="0" asp-for="Form.StartMileage" />
+                        <span asp-validation-for="Form.StartMileage" class="text-danger"></span>
+                    </div>
+                </div>
+                <div class="col-md-4">
+                    <div class="mb-3">
+                        <label class="form-label fw-bold" for="FuelLevel">
+                            Fuel Level <span style="color: #EF4444;">*</span>
+                        </label>
+                        <select class="form-select" id="FuelLevel" asp-for="Form.FuelLevel">
+                            <option value="Full">Full</option>
+                            <option value="3/4">3/4</option>
+                            <option value="1/2">1/2</option>
+                            <option value="1/4">1/4</option>
+                            <option value="Empty">Empty</option>
+                        </select>
+                        <span asp-validation-for="Form.FuelLevel" class="text-danger"></span>
+                    </div>
+                </div>
+                <div class="col-md-4">
+                    <div class="mb-3">
+                        <label class="form-label fw-bold" for="VehicleCondition">
+                            Vehicle Condition <span style="color: #EF4444;">*</span>
+                        </label>
+                        <input class="form-control" id="VehicleCondition" asp-for="Form.VehicleCondition" />
+                        <span asp-validation-for="Form.VehicleCondition" class="text-danger"></span>
+                    </div>
+                </div>
+            </div>
+
+            <div class="form-check mb-3">
+                <input class="form-check-input" id="HasDamage" asp-for="Form.HasDamage" />
+                <label class="form-check-label fw-bold" for="HasDamage">Damage found before rental</label>
+            </div>
+
+            <div class="row">
+                <div class="col-md-6">
+                    <div class="mb-3">
+                        <label class="form-label fw-bold" for="DamageDescription">Damage Description</label>
+                        <textarea class="form-control" id="DamageDescription" rows="3" asp-for="Form.DamageDescription"></textarea>
+                        <span asp-validation-for="Form.DamageDescription" class="text-danger"></span>
+                    </div>
+                </div>
+                <div class="col-md-6">
+                    <div class="mb-3">
+                        <label class="form-label fw-bold" for="AccessoriesNote">Accessories Note</label>
+                        <textarea class="form-control" id="AccessoriesNote" rows="3" asp-for="Form.AccessoriesNote"></textarea>
+                    </div>
                 </div>
             </div>
 
             <div class="mb-3">
-                <label class="form-label fw-bold" for="Notes">Notes</label>
-                <textarea class="form-control" id="Notes" rows="3" asp-for="Form.Notes"></textarea>
+                <label class="form-label fw-bold" for="InspectionNote">Inspection Note</label>
+                <textarea class="form-control" id="InspectionNote" rows="2" asp-for="Form.InspectionNote"></textarea>
             </div>
 
             <hr />
             <div class="d-flex gap-2">
-                <button type="submit" class="btn btn-primary">Create reservation</button>
+                <button type="submit" class="btn btn-primary">Create active rental</button>
                 <a asp-page="Index" class="btn btn-outline-secondary">Cancel</a>
             </div>
         </form>
@@ -120,17 +176,21 @@
 @section Scripts {
     <partial name="_ValidationScriptsPartial" />
     <script>
-        function updateDailyRate() {
+        function updateMotorcycleInfo() {
             var select = document.getElementById('MotorcycleId');
             var option = select.options[select.selectedIndex];
             var info = document.getElementById('motorcycleInfo');
             if (option && option.value) {
+                var mileage = Number(option.dataset.mileage || 0);
                 document.getElementById('dailyRateDisplay').textContent = Number(option.dataset.dailyrate).toLocaleString();
-                document.getElementById('currentMileage').textContent = Number(option.dataset.mileage).toLocaleString();
+                document.getElementById('currentMileage').textContent = mileage.toLocaleString();
+                document.getElementById('StartMileage').value = mileage;
                 info.style.display = 'block';
             } else {
                 info.style.display = 'none';
             }
         }
+
+        updateMotorcycleInfo();
     </script>
 }
