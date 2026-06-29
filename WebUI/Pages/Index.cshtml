@@ -21,6 +21,94 @@
         </div>
     </section>
 
+    <section class="dashboard-metrics mb-4">
+        <div class="dashboard-metric">
+            <div class="stat-label">New customers</div>
+            <div class="stat-value">@Model.NewCustomersThisWeek</div>
+            <div class="text-muted small">Registered this week</div>
+        </div>
+        <div class="dashboard-metric">
+            <div class="stat-label">Rentals this week</div>
+            <div class="stat-value">@Model.RentalsThisWeek</div>
+            <div class="text-muted small">Reservations and active rentals</div>
+        </div>
+        <div class="dashboard-metric">
+            <div class="stat-label">Active rentals</div>
+            <div class="stat-value">@Model.ActiveRentals</div>
+            <div class="text-muted small">Motorcycles currently out</div>
+        </div>
+        <div class="dashboard-metric">
+            <div class="stat-label">Most rented type</div>
+            <div class="stat-value dashboard-type-name">@Model.TopVehicleTypeName</div>
+            <div class="text-muted small">@Model.TopVehicleTypeRentalCount rental(s)</div>
+        </div>
+    </section>
+
+    <section class="dashboard-panels mb-4">
+        <div class="dashboard-panel">
+            <div class="dashboard-panel-header">
+                <div>
+                    <div class="page-kicker">Customer trend</div>
+                    <h2>Customers by Week</h2>
+                </div>
+            </div>
+            @{
+                var maxCustomers = Math.Max(1, Model.WeeklyCustomers.Any() ? Model.WeeklyCustomers.Max(x => x.Count) : 1);
+            }
+            <div class="weekly-chart">
+                @foreach (var week in Model.WeeklyCustomers)
+                {
+                    var width = Math.Max(6, (int)Math.Round((double)week.Count / maxCustomers * 100));
+                    <div class="weekly-row">
+                        <div class="weekly-label">
+                            <strong>@week.Label</strong>
+                            <span>@week.StartDate.ToString("dd/MM") - @week.EndDate.ToString("dd/MM")</span>
+                        </div>
+                        <div class="weekly-track">
+                            <div class="weekly-bar" style="width: @width%"></div>
+                        </div>
+                        <div class="weekly-count">@week.Count</div>
+                    </div>
+                }
+            </div>
+        </div>
+
+        <div class="dashboard-panel">
+            <div class="dashboard-panel-header">
+                <div>
+                    <div class="page-kicker">Rental demand</div>
+                    <h2>Top Motorcycle Types</h2>
+                </div>
+            </div>
+            @if (Model.TopVehicleTypes.Any())
+            {
+                var maxTypeRentals = Math.Max(1, Model.TopVehicleTypes.Max(x => x.RentalCount));
+                <div class="type-rank-list">
+                    @foreach (var type in Model.TopVehicleTypes)
+                    {
+                        var width = Math.Max(8, (int)Math.Round((double)type.RentalCount / maxTypeRentals * 100));
+                        <div class="type-rank-item">
+                            <div class="type-rank-top">
+                                <strong>@type.VehicleTypeName</strong>
+                                <span>@type.RentalCount rental(s)</span>
+                            </div>
+                            <div class="type-track">
+                                <div class="type-bar" style="width: @width%"></div>
+                            </div>
+                        </div>
+                    }
+                </div>
+            }
+            else
+            {
+                <div class="empty-state compact">
+                    <strong>No rental demand yet.</strong>
+                    <div>Completed or active contracts will appear here.</div>
+                </div>
+            }
+        </div>
+    </section>
+
     <section class="stat-grid mb-4">
         <a class="stat-card" asp-page="/Rentals/Index">
             <div class="stat-label">Rental workflow</div>

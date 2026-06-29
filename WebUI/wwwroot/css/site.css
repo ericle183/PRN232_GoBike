@@ -325,6 +325,127 @@ a:hover {
   font-weight: 850;
 }
 
+.dashboard-metrics {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(180px, 1fr));
+  gap: 0.9rem;
+}
+
+.dashboard-metric,
+.dashboard-panel {
+  border: 1px solid var(--gb-border);
+  border-radius: 8px;
+  background: var(--gb-surface);
+  box-shadow: var(--gb-shadow);
+}
+
+.dashboard-metric {
+  padding: 1rem;
+}
+
+.dashboard-type-name {
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.dashboard-panels {
+  display: grid;
+  grid-template-columns: minmax(0, 1.35fr) minmax(320px, 0.85fr);
+  gap: 0.9rem;
+}
+
+.dashboard-panel {
+  padding: 1rem;
+}
+
+.dashboard-panel-header {
+  display: flex;
+  align-items: flex-start;
+  justify-content: space-between;
+  gap: 1rem;
+  margin-bottom: 1rem;
+}
+
+.dashboard-panel h2 {
+  margin: 0;
+  font-size: 1.08rem;
+  font-weight: 850;
+}
+
+.weekly-chart,
+.type-rank-list {
+  display: grid;
+  gap: 0.75rem;
+}
+
+.weekly-row {
+  display: grid;
+  grid-template-columns: minmax(108px, 0.26fr) minmax(0, 1fr) 42px;
+  align-items: center;
+  gap: 0.75rem;
+}
+
+.weekly-label {
+  display: grid;
+  gap: 0.12rem;
+  min-width: 0;
+}
+
+.weekly-label strong,
+.type-rank-top strong {
+  color: var(--gb-text);
+  font-size: 0.9rem;
+}
+
+.weekly-label span,
+.type-rank-top span {
+  color: var(--gb-muted);
+  font-size: 0.78rem;
+}
+
+.weekly-track,
+.type-track {
+  height: 0.7rem;
+  overflow: hidden;
+  border-radius: 999px;
+  background: #edf2f7;
+}
+
+.weekly-bar {
+  height: 100%;
+  border-radius: inherit;
+  background: linear-gradient(90deg, var(--gb-primary), #0f766e);
+}
+
+.weekly-count {
+  color: var(--gb-text);
+  font-weight: 850;
+  text-align: right;
+}
+
+.type-rank-item {
+  display: grid;
+  gap: 0.45rem;
+}
+
+.type-rank-top {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 0.75rem;
+}
+
+.type-bar {
+  height: 100%;
+  border-radius: inherit;
+  background: #f59e0b;
+}
+
+.empty-state.compact {
+  padding: 1.4rem 1rem;
+}
+
 .empty-state {
   padding: 2.5rem 1rem;
   color: var(--gb-muted);
@@ -489,6 +610,19 @@ a:hover {
 }
 
 @media (max-width: 767.98px) {
+  .dashboard-panels {
+    grid-template-columns: 1fr;
+  }
+
+  .weekly-row {
+    grid-template-columns: 1fr;
+    gap: 0.35rem;
+  }
+
+  .weekly-count {
+    text-align: left;
+  }
+
   .page-heading {
     flex-direction: column;
   }
