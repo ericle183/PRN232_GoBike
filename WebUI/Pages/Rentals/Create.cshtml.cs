@@ -2,6 +2,7 @@ using System.ComponentModel.DataAnnotations;
 using System.Net.Http.Json;
 using System.Text.Json;
 using System.Text.Json.Serialization;
+using BusinessObjects;
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.AspNetCore.Mvc.RazorPages;
@@ -66,6 +67,12 @@ public class CreateModel : PageModel
         if (Form.MotorcycleId <= 0)
         {
             ModelState.AddModelError("Form.MotorcycleId", "Motorcycle is required.");
+            return await OnGetAsync();
+        }
+
+        if (Form.RentalDate.Date < SystemClock.Today)
+        {
+            ModelState.AddModelError("Form.RentalDate", "Rental date cannot be in the past.");
             return await OnGetAsync();
         }
 

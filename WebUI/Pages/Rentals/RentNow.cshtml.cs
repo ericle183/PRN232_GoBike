@@ -1,6 +1,7 @@
 using System.Net.Http.Json;
 using System.Text.Json;
 using System.Text.Json.Serialization;
+using BusinessObjects;
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.AspNetCore.Mvc.RazorPages;
@@ -25,8 +26,8 @@ public class RentNowModel : PageModel
 
     public async Task<IActionResult> OnGetAsync()
     {
-        Form.RentalDate = DateTime.Today;
-        Form.ExpectedReturnDate = DateTime.Today.AddDays(1);
+        Form.RentalDate = SystemClock.Today;
+        Form.ExpectedReturnDate = SystemClock.Today.AddDays(1);
         Form.FuelLevel = "Full";
         Form.VehicleCondition = "Good";
         Form.DepositPaymentMethod = 1;
@@ -37,7 +38,7 @@ public class RentNowModel : PageModel
 
     public async Task<IActionResult> OnPostAsync()
     {
-        Form.RentalDate = DateTime.Today;
+        Form.RentalDate = SystemClock.Today;
 
         if (Form.CustomerId <= 0)
             ModelState.AddModelError("Form.CustomerId", "Customer is required.");
@@ -45,7 +46,7 @@ public class RentNowModel : PageModel
         if (Form.MotorcycleId <= 0)
             ModelState.AddModelError("Form.MotorcycleId", "Motorcycle is required.");
 
-        if (Form.ExpectedReturnDate.Date < DateTime.Today)
+        if (Form.ExpectedReturnDate.Date < SystemClock.Today)
             ModelState.AddModelError("Form.ExpectedReturnDate", "Expected return date must be today or later.");
 
         if (!Form.DepositConfirmed)
@@ -73,7 +74,7 @@ public class RentNowModel : PageModel
         {
             customerId = Form.CustomerId,
             motorcycleId = Form.MotorcycleId,
-            startDate = DateTime.Today.ToString("yyyy-MM-dd"),
+            startDate = SystemClock.Today.ToString("yyyy-MM-dd"),
             endDate = Form.ExpectedReturnDate.ToString("yyyy-MM-dd"),
             depositConfirmed = Form.DepositConfirmed,
             depositPaymentMethod = Form.DepositPaymentMethod,

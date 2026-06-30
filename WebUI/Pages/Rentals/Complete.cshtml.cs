@@ -1,5 +1,6 @@
 using System.Net.Http.Json;
 using System.Text.Json;
+using BusinessObjects;
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.AspNetCore.Mvc.RazorPages;
@@ -71,7 +72,7 @@ public class CompleteModel : PageModel
     {
         if (!await LoadRentalAsync(id)) return NotFound();
 
-        ActualReturnDate = DateTime.Today;
+        ActualReturnDate = SystemClock.Today;
         EndMileage = Rental.EndMileage ?? Rental.MotorcycleMileage ?? Rental.StartMileage ?? 0;
         FuelLevel = "Full";
         VehicleCondition = "Good";

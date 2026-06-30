@@ -1,0 +1,54 @@
+@page "{id:int?}"
+@model WebUI.Pages.Rentals.NoShowModel
+@{
+    ViewData["Title"] = "Rentals / NoShow";
+}
+
+<div class="page-heading">
+    <div>
+        <div class="page-kicker">Rental no-show</div>
+        <h1>Mark No-Show</h1>
+        <p class="page-subtitle">Use this when a reserved customer does not arrive to receive the motorcycle.</p>
+    </div>
+    <a asp-page="Details" asp-route-id="@Model.Rental.Id" class="btn btn-outline-secondary">Back</a>
+</div>
+
+@if (!string.IsNullOrEmpty(Model.ErrorMessage))
+{
+    <div class="alert alert-danger">@Model.ErrorMessage</div>
+}
+
+<div class="content-card">
+    <div class="card-body">
+        <dl class="row mb-3">
+            <dt class="col-sm-4 text-muted">Customer</dt>
+            <dd class="col-sm-8">@Model.Rental.CustomerFullName</dd>
+
+            <dt class="col-sm-4 text-muted">Motorcycle</dt>
+            <dd class="col-sm-8">@Model.Rental.MotorcycleLicensePlate</dd>
+
+            <dt class="col-sm-4 text-muted">Rental Date</dt>
+            <dd class="col-sm-8">@Model.Rental.RentalDate.ToString("dd/MM/yyyy")</dd>
+        </dl>
+
+        <form method="post">
+            <div class="mb-3">
+                <label class="form-label fw-bold" for="Reason">
+                    No-Show Reason <span style="color: #EF4444;">*</span>
+                </label>
+                <textarea class="form-control" id="Reason" rows="3" asp-for="Reason"></textarea>
+                <span asp-validation-for="Reason" class="text-danger"></span>
+                <div class="form-text">The deposit is retained and the motorcycle will return to Available.</div>
+            </div>
+
+            <div class="d-flex gap-2">
+                <button type="submit" class="btn btn-warning">Mark no-show</button>
+                <a asp-page="Details" asp-route-id="@Model.Rental.Id" class="btn btn-outline-secondary">Cancel</a>
+            </div>
+        </form>
+    </div>
+</div>
+
+@section Scripts {
+    <partial name="_ValidationScriptsPartial" />
+}

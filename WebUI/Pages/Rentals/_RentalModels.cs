@@ -1,3 +1,5 @@
+using BusinessObjects;
+
 namespace WebUI.Pages.Rentals;
 
 public class RentalListItem
@@ -33,6 +35,33 @@ public class RentalDetail
     public string? CreatedBy { get; set; }
     public string? CustomerFullName { get; set; }
     public string? MotorcycleLicensePlate { get; set; }
+    public List<RentalInspectionView> Inspections { get; set; } = [];
+    public List<RentalPaymentView> Payments { get; set; } = [];
+}
+
+public class RentalInspectionView
+{
+    public int Id { get; set; }
+    public string InspectionType { get; set; } = "";
+    public int Mileage { get; set; }
+    public string FuelLevel { get; set; } = "";
+    public string VehicleCondition { get; set; } = "";
+    public bool HasDamage { get; set; }
+    public string? DamageDescription { get; set; }
+    public string? AccessoriesNote { get; set; }
+    public string? ImageUrl { get; set; }
+    public string? Note { get; set; }
+    public DateTime CreatedAt { get; set; }
+}
+
+public class RentalPaymentView
+{
+    public int Id { get; set; }
+    public string PaymentType { get; set; } = "";
+    public decimal Amount { get; set; }
+    public string PaymentMethod { get; set; } = "";
+    public string? Note { get; set; }
+    public DateTime CreatedAt { get; set; }
 }
 
 public class CustomerOption
@@ -65,8 +94,8 @@ public class RentalCreateForm
 {
     public int CustomerId { get; set; }
     public int MotorcycleId { get; set; }
-    public DateTime RentalDate { get; set; } = DateTime.Today;
-    public DateTime ExpectedReturnDate { get; set; } = DateTime.Today.AddDays(1);
+    public DateTime RentalDate { get; set; } = SystemClock.Today;
+    public DateTime ExpectedReturnDate { get; set; } = SystemClock.Today.AddDays(1);
     public bool DepositConfirmed { get; set; }
     public int DepositPaymentMethod { get; set; } = 1;
     public string? DepositPaymentNote { get; set; }

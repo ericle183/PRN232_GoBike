@@ -88,6 +88,9 @@
                             <option value="1">Available</option>
                             <option value="4">Maintenance</option>
                         </select>
+                        <div class="form-text text-muted d-none" id="maintenanceHint">
+                            Damage returns will create a maintenance record.
+                        </div>
                     </div>
                 </div>
             </div>
@@ -196,15 +199,45 @@
             if (!endMileage && endMileage !== 0) return;
 
             var actualReturnDate = new Date(actualReturn);
-            var totalDays = Math.ceil((expectedReturn - rentalDate) / (1000 * 60 * 60 * 24)) + 1;
-            var actualDays = Math.ceil((actualReturnDate - rentalDate) / (1000 * 60 * 60 * 24)) + 1;
-            var daysDiff = Math.max(0, actualDays - totalDays);
+            if (actualReturnDate < rentalDate) return;
+
+            var plannedDays = Math.max(1, Math.ceil((expectedReturn - rentalDate) / (1000 * 60 * 60 * 24)) + 1);
+            var actualDays = Math.max(1, Math.ceil((actualReturnDate - rentalDate) / (1000 * 60 * 60 * 24)) + 1);
+            var billableBaseDays = Math.min(actualDays, plannedDays);
+            var daysDiff = Math.max(0, actualDays - plannedDays);
             var lateFees = daysDiff * dailyRate;
-            var estimatedFinal = @Model.Rental.DailyRate * actualDays + lateFees;
+            var damageFee = parseFloat(document.getElementById('DamageFee').value || '0');
+            var otherFee = parseFloat(document.getElementById('OtherFee').value || '0');
+            var discountAmount = parseFloat(document.getElementById('DiscountAmount').value || '0');
+            var estimatedFinal = (dailyRate * billableBaseDays) + lateFees + damageFee + otherFee - discountAmount;
 
             var preview = document.getElementById('finalAmountPreview');
             document.getElementById('finalAmountDisplay').textContent = Math.round(estimatedFinal).toLocaleString();
             preview.style.display = 'block';
         }
+
+        function syncReturnStatusWithDamage() {
+            var hasDamage = document.getElementById('HasDamage').checked;
+            var damageFee = parseFloat(document.getElementById('DamageFee').value || '0');
+            var shouldMaintain = hasDamage || damageFee > 0;
+            var statusSelect = document.getElementById('MotorcycleStatusAfterReturn');
+            var hint = document.getElementById('maintenanceHint');
+
+            if (shouldMaintain) {
+                statusSelect.value = '4';
+                hint.classList.remove('d-none');
+            } else {
+                hint.classList.add('d-none');
+            }
+        }
+
+        document.getElementById('HasDamage').addEventListener('change', syncReturnStatusWithDamage);
+        document.getElementById('DamageFee').addEventListener('input', syncReturnStatusWithDamage);
+        document.getElementById('ActualReturnDate').addEventListener('change', estimateFinalAmount);
+        document.getElementById('DamageFee').addEventListener('input', estimateFinalAmount);
+        document.getElementById('OtherFee').addEventListener('input', estimateFinalAmount);
+        document.getElementById('DiscountAmount').addEventListener('input', estimateFinalAmount);
+        syncReturnStatusWithDamage();
+        estimateFinalAmount();
     </script>
 }

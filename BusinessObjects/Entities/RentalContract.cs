@@ -1,5 +1,6 @@
 using System.ComponentModel.DataAnnotations;
 using System.ComponentModel.DataAnnotations.Schema;
+using BusinessObjects;
 using BusinessObjects.Enums;
 
 namespace BusinessObjects.Entities;
@@ -100,7 +101,7 @@ public class RentalContract
     [MaxLength(500)]
     public string? NoShowReason { get; set; }
 
-    public DateTime CreatedAt { get; set; } = DateTime.UtcNow;
+    public DateTime CreatedAt { get; set; } = SystemClock.Now;
 
     public DateTime? UpdatedAt { get; set; }
 
@@ -130,9 +131,6 @@ public class RentalContract
 
     [NotMapped]
     public int? EndMileage { get; set; }
-
-    [NotMapped]
-    public bool IsActive { get; set; } = true;
 
     [ForeignKey(nameof(CustomerId))]
     public Customer? Customer { get; set; }

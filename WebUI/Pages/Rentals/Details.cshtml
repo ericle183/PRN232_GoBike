@@ -17,6 +17,7 @@
             {
                 <a asp-page="Activate" asp-route-id="@Model.Rental.Id" class="btn btn-success">Activate</a>
                 <a asp-page="Cancel" asp-route-id="@Model.Rental.Id" class="btn btn-danger">Cancel</a>
+                <a asp-page="NoShow" asp-route-id="@Model.Rental.Id" class="btn btn-warning">No-show</a>
             }
             else if (Model.Rental.Status == 2)
             {
@@ -86,13 +87,13 @@
                     @if (Model.Rental.StartMileage.HasValue)
                     {
                         <dt class="col-sm-4 text-muted">Start Mileage</dt>
-                        <dd class="col-sm-8">@Model.Rental.StartMileage km</dd>
+                        <dd class="col-sm-8">@Model.Rental.StartMileage.Value.ToString("N0") km</dd>
                     }
 
                     @if (Model.Rental.EndMileage.HasValue)
                     {
                         <dt class="col-sm-4 text-muted">End Mileage</dt>
-                        <dd class="col-sm-8">@Model.Rental.EndMileage km</dd>
+                        <dd class="col-sm-8">@Model.Rental.EndMileage.Value.ToString("N0") km</dd>
                     }
 
                     <dt class="col-sm-4 text-muted">Created By</dt>
@@ -109,5 +110,128 @@
                 <dd class="col-sm-10">@Model.Rental.Notes</dd>
             </dl>
         }
+    </div>
+</div>
+
+<div class="row g-4">
+    <div class="col-lg-6">
+        <div class="content-card h-100">
+            <div class="card-body">
+                <div class="page-heading mb-3">
+                    <div>
+                        <div class="page-kicker">Payments</div>
+                        <h2>Payment History</h2>
+                    </div>
+                </div>
+
+                @if (Model.Rental.Payments.Any())
+                {
+                    <div class="table-responsive">
+                        <table class="table">
+                            <thead>
+                                <tr>
+                                    <th>Type</th>
+                                    <th>Method</th>
+                                    <th>Amount</th>
+                                    <th>Created</th>
+                                </tr>
+                            </thead>
+                            <tbody>
+                                @foreach (var payment in Model.Rental.Payments)
+                                {
+                                    <tr>
+                                        <td>
+                                            <strong>@payment.PaymentType</strong>
+                                            @if (!string.IsNullOrWhiteSpace(payment.Note))
+                                            {
+                                                <div class="text-muted small">@payment.Note</div>
+                                            }
+                                        </td>
+                                        <td>@payment.PaymentMethod</td>
+                                        <td>@payment.Amount.ToString("N0") VND</td>
+                                        <td>@payment.CreatedAt.ToString("dd/MM/yyyy HH:mm")</td>
+                                    </tr>
+                                }
+                            </tbody>
+                        </table>
+                    </div>
+                }
+                else
+                {
+                    <div class="empty-state compact">
+                        <strong>No payments recorded.</strong>
+                        <div>Deposit, additional payment, or refund records will appear here.</div>
+                    </div>
+                }
+            </div>
+        </div>
+    </div>
+
+    <div class="col-lg-6">
+        <div class="content-card h-100">
+            <div class="card-body">
+                <div class="page-heading mb-3">
+                    <div>
+                        <div class="page-kicker">Inspections</div>
+                        <h2>Vehicle Inspections</h2>
+                    </div>
+                </div>
+
+                @if (Model.Rental.Inspections.Any())
+                {
+                    <div class="inspection-list">
+                        @foreach (var inspection in Model.Rental.Inspections)
+                        {
+                            <div class="inspection-item">
+                                <div class="d-flex justify-content-between gap-3">
+                                    <div>
+                                        <strong>@inspection.InspectionType</strong>
+                                        <div class="text-muted small">@inspection.CreatedAt.ToString("dd/MM/yyyy HH:mm")</div>
+                                    </div>
+                                    <span class="badge @(inspection.HasDamage ? "badge-cancelled" : "badge-success")">
+                                        @(inspection.HasDamage ? "Damage" : "Clear")
+                                    </span>
+                                </div>
+                                <dl class="row mt-3 mb-0">
+                                    <dt class="col-sm-4 text-muted">Mileage</dt>
+                                    <dd class="col-sm-8">@inspection.Mileage.ToString("N0") km</dd>
+
+                                    <dt class="col-sm-4 text-muted">Fuel</dt>
+                                    <dd class="col-sm-8">@inspection.FuelLevel</dd>
+
+                                    <dt class="col-sm-4 text-muted">Condition</dt>
+                                    <dd class="col-sm-8">@inspection.VehicleCondition</dd>
+
+                                    @if (!string.IsNullOrWhiteSpace(inspection.DamageDescription))
+                                    {
+                                        <dt class="col-sm-4 text-muted">Damage</dt>
+                                        <dd class="col-sm-8">@inspection.DamageDescription</dd>
+                                    }
+
+                                    @if (!string.IsNullOrWhiteSpace(inspection.AccessoriesNote))
+                                    {
+                                        <dt class="col-sm-4 text-muted">Accessories</dt>
+                                        <dd class="col-sm-8">@inspection.AccessoriesNote</dd>
+                                    }
+
+                                    @if (!string.IsNullOrWhiteSpace(inspection.Note))
+                                    {
+                                        <dt class="col-sm-4 text-muted">Note</dt>
+                                        <dd class="col-sm-8">@inspection.Note</dd>
+                                    }
+                                </dl>
+                            </div>
+                        }
+                    </div>
+                }
+                else
+                {
+                    <div class="empty-state compact">
+                        <strong>No inspections recorded.</strong>
+                        <div>Before-rental and after-return inspections will appear here.</div>
+                    </div>
+                }
+            </div>
+        </div>
     </div>
 </div>

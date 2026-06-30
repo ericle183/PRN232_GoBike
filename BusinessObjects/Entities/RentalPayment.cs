@@ -1,5 +1,6 @@
 using System.ComponentModel.DataAnnotations;
 using System.ComponentModel.DataAnnotations.Schema;
+using BusinessObjects;
 using BusinessObjects.Enums;
 
 namespace BusinessObjects.Entities;
@@ -23,7 +24,7 @@ public class RentalPayment
 
     public int? CreatedByUserId { get; set; }
 
-    public DateTime CreatedAt { get; set; } = DateTime.UtcNow;
+    public DateTime CreatedAt { get; set; } = SystemClock.Now;
 
     [ForeignKey(nameof(RentalContractId))]
     public RentalContract? RentalContract { get; set; }
