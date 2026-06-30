@@ -6,7 +6,7 @@ using Microsoft.AspNetCore.Mvc.RazorPages;
 
 namespace WebUI.Pages.Rentals;
 
-[Authorize(Roles = "Admin,Staff")]
+[Authorize(Roles = "Admin")]
 public class NoShowModel : PageModel
 {
     private readonly IHttpClientFactory _httpClientFactory;

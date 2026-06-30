@@ -10,13 +10,19 @@
     var name = User.FindFirst(System.Security.Claims.ClaimTypes.GivenName)?.Value
         ?? User.Identity?.Name
         ?? "there";
+    var isAdmin = AuthorizationHelper.IsAdmin(User);
+    var isStaff = User.IsInRole("Staff");
+    var dashboardKicker = isAdmin ? "Operations control" : "Today at the rental desk";
+    var dashboardSubtitle = isAdmin
+        ? "Approve reservations, monitor fleet health, and manage operational access."
+        : "Create customers, prepare rentals, and complete vehicle returns.";
 
     <section class="hero-panel mb-4">
         <div class="page-heading mb-0">
             <div>
-                <div class="page-kicker">Today at the rental desk</div>
+                <div class="page-kicker">@dashboardKicker</div>
                 <h1>Welcome back, @name</h1>
-                <p class="page-subtitle">Manage customers, motorcycles, and rental workflows from one place.</p>
+                <p class="page-subtitle">@dashboardSubtitle</p>
             </div>
         </div>
     </section>
@@ -110,27 +116,50 @@
     </section>
 
     <section class="stat-grid mb-4">
-        <a class="stat-card" asp-page="/Rentals/Index">
-            <div class="stat-label">Rental workflow</div>
-            <div class="stat-value">Rental</div>
-            <div class="text-muted small">Reserve, hand over, complete, cancel.</div>
-        </a>
-        <a class="stat-card" asp-page="/Motorcycle/Index">
-            <div class="stat-label">Fleet</div>
-            <div class="stat-value">Motorcycles</div>
-            <div class="text-muted small">Track availability, mileage, and status.</div>
-        </a>
-        <a class="stat-card" asp-page="/Customers/Index">
-            <div class="stat-label">Customers</div>
-            <div class="stat-value">Profiles</div>
-            <div class="text-muted small">Manage identity, phone, and license details.</div>
-        </a>
-        @if (AuthorizationHelper.IsAdmin(User))
+        @if (isAdmin)
         {
+            <a class="stat-card" asp-page="/Rentals/Index" asp-route-FilterStatus="Reserved">
+                <div class="stat-label">Approval queue</div>
+                <div class="stat-value">Reserved</div>
+                <div class="text-muted small">Activate, cancel, or mark no-show.</div>
+            </a>
+            <a class="stat-card" asp-page="/Motorcycle/Index">
+                <div class="stat-label">Fleet control</div>
+                <div class="stat-value">Motorcycles</div>
+                <div class="text-muted small">Create, deactivate, and update status.</div>
+            </a>
             <a class="stat-card" asp-page="/Admin/Staff/Index">
                 <div class="stat-label">Admin</div>
                 <div class="stat-value">Staff</div>
                 <div class="text-muted small">Create and manage staff accounts.</div>
+            </a>
+            <a class="stat-card" asp-page="/Customers/Index">
+                <div class="stat-label">Customer records</div>
+                <div class="stat-value">Profiles</div>
+                <div class="text-muted small">Review renter identity and licenses.</div>
+            </a>
+        }
+        else if (isStaff)
+        {
+            <a class="stat-card" asp-page="/Rentals/RentNow">
+                <div class="stat-label">Walk-in rental</div>
+                <div class="stat-value">Rent now</div>
+                <div class="text-muted small">Create active rentals at the desk.</div>
+            </a>
+            <a class="stat-card" asp-page="/Rentals/Create">
+                <div class="stat-label">Reservation</div>
+                <div class="stat-value">Reserve</div>
+                <div class="text-muted small">Prepare bookings for admin approval.</div>
+            </a>
+            <a class="stat-card" asp-page="/Rentals/Index" asp-route-FilterStatus="Active">
+                <div class="stat-label">Returns</div>
+                <div class="stat-value">Complete</div>
+                <div class="text-muted small">Record return inspection and settlement.</div>
+            </a>
+            <a class="stat-card" asp-page="/Customers/Create">
+                <div class="stat-label">Customer desk</div>
+                <div class="stat-value">Add</div>
+                <div class="text-muted small">Register renter identity and license.</div>
             </a>
         }
     </section>

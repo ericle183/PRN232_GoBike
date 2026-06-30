@@ -15,9 +15,16 @@
         {
             @if (Model.Rental.Status == 1)
             {
-                <a asp-page="Activate" asp-route-id="@Model.Rental.Id" class="btn btn-success">Activate</a>
-                <a asp-page="Cancel" asp-route-id="@Model.Rental.Id" class="btn btn-danger">Cancel</a>
-                <a asp-page="NoShow" asp-route-id="@Model.Rental.Id" class="btn btn-warning">No-show</a>
+                @if (User.IsInRole("Admin"))
+                {
+                    <a asp-page="Activate" asp-route-id="@Model.Rental.Id" class="btn btn-success">Activate</a>
+                    <a asp-page="Cancel" asp-route-id="@Model.Rental.Id" class="btn btn-danger">Cancel</a>
+                    <a asp-page="NoShow" asp-route-id="@Model.Rental.Id" class="btn btn-warning">No-show</a>
+                }
+                else
+                {
+                    <span class="badge badge-info align-self-center">Pending admin approval</span>
+                }
             }
             else if (Model.Rental.Status == 2)
             {
