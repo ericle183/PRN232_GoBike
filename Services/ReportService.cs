@@ -1,3 +1,4 @@
+using BusinessObjects;
 using BusinessObjects.Enums;
 using DataAccessObjects;
 using Microsoft.EntityFrameworkCore;
@@ -17,7 +18,7 @@ public class ReportService : IReportService
 
     public async Task<DashboardSummaryDto> GetDashboardAsync()
     {
-        var today = DateTime.Today;
+        var today = SystemClock.Today;
         var monthStart = new DateTime(today.Year, today.Month, 1);
         var tomorrow = today.AddDays(1);
 
@@ -137,7 +138,7 @@ public class ReportService : IReportService
 
         return new ReportInsightDto
         {
-            GeneratedAt = DateTime.UtcNow,
+            GeneratedAt = SystemClock.Now,
             Summary = $"Trong khoảng {revenue.FromDate:dd/MM/yyyy} - {revenue.ToDate:dd/MM/yyyy}, hệ thống ghi nhận {revenue.CompletedContractCount} hợp đồng hoàn thành với doanh thu {revenue.TotalRevenue:N0} VND.",
             Recommendations = recommendations
         };
@@ -152,7 +153,7 @@ public class ReportService : IReportService
 
     private static (DateTime From, DateTime ToExclusive) NormalizeRange(DateTime? fromDate, DateTime? toDate)
     {
-        var today = DateTime.Today;
+        var today = SystemClock.Today;
         var from = (fromDate ?? new DateTime(today.Year, today.Month, 1)).Date;
         var to = (toDate ?? today).Date;
 

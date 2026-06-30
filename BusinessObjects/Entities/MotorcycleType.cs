@@ -1,5 +1,6 @@
 using System.ComponentModel.DataAnnotations;
 using System.ComponentModel.DataAnnotations.Schema;
+using BusinessObjects;
 
 namespace BusinessObjects.Entities;
 
@@ -23,7 +24,7 @@ public class MotorcycleType
 
     public bool IsActive { get; set; } = true;
 
-    public DateTime CreatedAt { get; set; } = DateTime.UtcNow;
+    public DateTime CreatedAt { get; set; } = SystemClock.Now;
 
     public DateTime? UpdatedAt { get; set; }
 

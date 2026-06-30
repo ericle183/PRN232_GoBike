@@ -1,5 +1,6 @@
 using System.Text.Json;
 using System.Text.Json.Serialization;
+using BusinessObjects;
 using Microsoft.AspNetCore.Mvc.RazorPages;
 using Services.DTOs;
 
@@ -44,7 +45,7 @@ public class IndexModel : PageModel
 
     private void BuildWeeklyCustomers(List<CustomerDashboardItem> customers)
     {
-        var currentWeekStart = GetWeekStart(DateTime.Today);
+        var currentWeekStart = GetWeekStart(SystemClock.Today);
         var weeks = Enumerable.Range(0, 6)
             .Select(offset => currentWeekStart.AddDays(-7 * (5 - offset)))
             .ToList();
@@ -68,7 +69,7 @@ public class IndexModel : PageModel
 
     private void BuildRentalHighlights(List<RentalDashboardItem> rentals, List<MotorcycleDto> motorcycles)
     {
-        var currentWeekStart = GetWeekStart(DateTime.Today);
+        var currentWeekStart = GetWeekStart(SystemClock.Today);
         var nextWeekStart = currentWeekStart.AddDays(7);
         var motorcycleTypesByPlate = motorcycles
             .Where(m => !string.IsNullOrWhiteSpace(m.LicensePlate))

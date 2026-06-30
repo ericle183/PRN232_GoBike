@@ -1,3 +1,4 @@
+using BusinessObjects;
 using BusinessObjects.Entities;
 using Repositories;
 using Services.DTOs;
@@ -37,7 +38,7 @@ public class MotorcycleTypeService : IMotorcycleTypeService
             DefaultDailyRate = dto.DefaultDailyRate,
             DefaultDepositAmount = dto.DefaultDepositAmount,
             IsActive = true,
-            CreatedAt = DateTime.UtcNow
+            CreatedAt = SystemClock.Now
         };
 
         await motorcycleTypeRepository.AddAsync(type);
@@ -61,7 +62,7 @@ public class MotorcycleTypeService : IMotorcycleTypeService
         type.Description = string.IsNullOrWhiteSpace(dto.Description) ? null : dto.Description.Trim();
         type.DefaultDailyRate = dto.DefaultDailyRate;
         type.DefaultDepositAmount = dto.DefaultDepositAmount;
-        type.UpdatedAt = DateTime.UtcNow;
+        type.UpdatedAt = SystemClock.Now;
 
         motorcycleTypeRepository.Update(type);
         return type;
@@ -78,7 +79,7 @@ public class MotorcycleTypeService : IMotorcycleTypeService
         }
 
         type.IsActive = false;
-        type.UpdatedAt = DateTime.UtcNow;
+        type.UpdatedAt = SystemClock.Now;
         motorcycleTypeRepository.Update(type);
     }
 
@@ -88,7 +89,7 @@ public class MotorcycleTypeService : IMotorcycleTypeService
             ?? throw new KeyNotFoundException($"Motorcycle type with ID {id} not found.");
 
         type.IsActive = true;
-        type.UpdatedAt = DateTime.UtcNow;
+        type.UpdatedAt = SystemClock.Now;
         motorcycleTypeRepository.Update(type);
     }
 

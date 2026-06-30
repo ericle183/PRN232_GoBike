@@ -1,3 +1,4 @@
+using BusinessObjects;
 using BusinessObjects.Entities;
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
@@ -65,7 +66,7 @@ public class CustomerController : ControllerBase
             DateOfBirth = dto.DateOfBirth,
             DriverLicenseNo = dto.DriverLicenseNo,
             IsActive = true,
-            CreatedAt = DateTime.UtcNow
+            CreatedAt = SystemClock.Now
         };
 
         try

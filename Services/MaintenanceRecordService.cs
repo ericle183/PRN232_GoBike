@@ -1,3 +1,4 @@
+using BusinessObjects;
 using BusinessObjects.Entities;
 using BusinessObjects.Enums;
 using DataAccessObjects;
@@ -89,7 +90,7 @@ public class MaintenanceRecordService : IMaintenanceRecordService
             }
         }
 
-        var startDate = dto.StartDate?.Date ?? DateTime.Today;
+        var startDate = dto.StartDate?.Date ?? SystemClock.Today;
         var record = new MaintenanceRecord
         {
             MotorcycleId = dto.MotorcycleId,
@@ -100,11 +101,11 @@ public class MaintenanceRecordService : IMaintenanceRecordService
             Status = dto.Status,
             StartDate = startDate,
             CreatedByUserId = userId,
-            CreatedAt = DateTime.UtcNow
+            CreatedAt = SystemClock.Now
         };
 
         motorcycle.Status = MotorcycleStatus.Maintenance;
-        motorcycle.UpdatedAt = DateTime.UtcNow;
+        motorcycle.UpdatedAt = SystemClock.Now;
 
         context.MaintenanceRecords.Add(record);
         await context.SaveChangesAsync();
@@ -130,12 +131,12 @@ public class MaintenanceRecordService : IMaintenanceRecordService
         record.Status = dto.Status;
         record.StartDate = dto.StartDate?.Date ?? record.StartDate;
         record.UpdatedByUserId = userId;
-        record.UpdatedAt = DateTime.UtcNow;
+        record.UpdatedAt = SystemClock.Now;
 
         if (record.Motorcycle != null)
         {
             record.Motorcycle.Status = MotorcycleStatus.Maintenance;
-            record.Motorcycle.UpdatedAt = DateTime.UtcNow;
+            record.Motorcycle.UpdatedAt = SystemClock.Now;
         }
 
         await context.SaveChangesAsync();
@@ -150,7 +151,7 @@ public class MaintenanceRecordService : IMaintenanceRecordService
             throw new InvalidOperationException("Cannot complete a cancelled maintenance record.");
         }
 
-        var endDate = dto.EndDate?.Date ?? DateTime.Today;
+        var endDate = dto.EndDate?.Date ?? SystemClock.Today;
         if (endDate < record.StartDate.Date)
         {
             throw new InvalidOperationException("EndDate cannot be earlier than StartDate.");
@@ -159,12 +160,12 @@ public class MaintenanceRecordService : IMaintenanceRecordService
         record.Status = MaintenanceStatus.Completed;
         record.EndDate = endDate;
         record.UpdatedByUserId = userId;
-        record.UpdatedAt = DateTime.UtcNow;
+        record.UpdatedAt = SystemClock.Now;
 
         if (!await HasOtherOpenMaintenanceAsync(record.MotorcycleId, record.Id) && record.Motorcycle != null)
         {
             record.Motorcycle.Status = MotorcycleStatus.Available;
-            record.Motorcycle.UpdatedAt = DateTime.UtcNow;
+            record.Motorcycle.UpdatedAt = SystemClock.Now;
         }
 
         await context.SaveChangesAsync();
@@ -181,12 +182,12 @@ public class MaintenanceRecordService : IMaintenanceRecordService
 
         record.Status = MaintenanceStatus.Cancelled;
         record.UpdatedByUserId = userId;
-        record.UpdatedAt = DateTime.UtcNow;
+        record.UpdatedAt = SystemClock.Now;
 
         if (!await HasOtherOpenMaintenanceAsync(record.MotorcycleId, record.Id) && record.Motorcycle != null)
         {
             record.Motorcycle.Status = MotorcycleStatus.Available;
-            record.Motorcycle.UpdatedAt = DateTime.UtcNow;
+            record.Motorcycle.UpdatedAt = SystemClock.Now;
         }
 
         await context.SaveChangesAsync();

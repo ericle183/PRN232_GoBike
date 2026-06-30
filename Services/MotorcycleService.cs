@@ -1,3 +1,4 @@
+using BusinessObjects;
 using BusinessObjects.Entities;
 using BusinessObjects.Enums;
 using Repositories;
@@ -89,7 +90,7 @@ public class MotorcycleService : IMotorcycleService
             ImageUrl = imageUrl,
             Status = MotorcycleStatus.Available,
             IsActive = true,
-            CreatedAt = DateTime.UtcNow
+            CreatedAt = SystemClock.Now
         };
 
         await _motorcycleRepo.AddAsync(motorcycle);
@@ -153,7 +154,7 @@ public class MotorcycleService : IMotorcycleService
                 : request.ImageUrl.Trim();
         }
 
-        motorcycle.UpdatedAt = DateTime.UtcNow;
+        motorcycle.UpdatedAt = SystemClock.Now;
         _motorcycleRepo.Update(motorcycle);
 
         return MapToDto(motorcycle);
@@ -169,7 +170,7 @@ public class MotorcycleService : IMotorcycleService
             throw new InvalidOperationException("Cannot deactivate motorcycle with active or reserved rentals.");
 
         motorcycle.IsActive = false;
-        motorcycle.UpdatedAt = DateTime.UtcNow;
+        motorcycle.UpdatedAt = SystemClock.Now;
         _motorcycleRepo.Update(motorcycle);
     }
 
@@ -180,7 +181,7 @@ public class MotorcycleService : IMotorcycleService
             throw new KeyNotFoundException($"Motorcycle with ID {id} not found.");
 
         motorcycle.Status = newStatus;
-        motorcycle.UpdatedAt = DateTime.UtcNow;
+        motorcycle.UpdatedAt = SystemClock.Now;
         _motorcycleRepo.Update(motorcycle);
     }
 
@@ -191,7 +192,7 @@ public class MotorcycleService : IMotorcycleService
             throw new KeyNotFoundException($"Motorcycle with ID {id} not found.");
 
         motorcycle.Mileage = newMileage;
-        motorcycle.UpdatedAt = DateTime.UtcNow;
+        motorcycle.UpdatedAt = SystemClock.Now;
         _motorcycleRepo.Update(motorcycle);
     }
 

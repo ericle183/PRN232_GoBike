@@ -1,4 +1,5 @@
 using BusinessObjects.Entities;
+using BusinessObjects;
 using BusinessObjects.Enums;
 using DataAccessObjects;
 using Microsoft.EntityFrameworkCore;
@@ -31,6 +32,7 @@ public class RentalContractService : IRentalContractService
         ValidateDepositConfirmation(request.DepositConfirmed);
         ValidatePaymentMethod(request.DepositPaymentMethod, nameof(request.DepositPaymentMethod));
         ValidateDateRange(request.StartDate, request.EndDate);
+        ValidateReservationStartDate(request.StartDate);
         ValidateAdvanceBookingLimit(request.StartDate);
 
         await using var transaction = await context.Database.BeginTransactionAsync();
@@ -42,7 +44,7 @@ public class RentalContractService : IRentalContractService
         contract.Notes = request.Notes;
 
         motorcycle.Status = MotorcycleStatus.Reserved;
-        motorcycle.UpdatedAt = DateTime.UtcNow;
+        motorcycle.UpdatedAt = SystemClock.Now;
 
         context.RentalContracts.Add(contract);
         await context.SaveChangesAsync();
@@ -72,7 +74,7 @@ public class RentalContractService : IRentalContractService
 
         motorcycle.Status = MotorcycleStatus.Rented;
         motorcycle.Mileage = request.BeforeInspection.Mileage;
-        motorcycle.UpdatedAt = DateTime.UtcNow;
+        motorcycle.UpdatedAt = SystemClock.Now;
 
         context.RentalContracts.Add(contract);
         await context.SaveChangesAsync();
@@ -96,7 +98,7 @@ public class RentalContractService : IRentalContractService
         if (contract.Status != RentalStatus.Reserved)
             throw new InvalidOperationException("Only reserved contracts can be handed over");
 
-        if (DateTime.Today < contract.StartDate.Date)
+        if (SystemClock.Today < contract.StartDate.Date)
             throw new InvalidOperationException("Cannot hand over motorcycle before StartDate");
 
         if (contract.Motorcycle is null || contract.Motorcycle.Status != MotorcycleStatus.Reserved)
@@ -109,12 +111,12 @@ public class RentalContractService : IRentalContractService
             throw new InvalidOperationException("Deposit payment is required before handover");
 
         contract.Status = RentalStatus.Active;
-        contract.UpdatedAt = DateTime.UtcNow;
+        contract.UpdatedAt = SystemClock.Now;
         contract.UpdatedByUserId = userId;
 
         contract.Motorcycle.Status = MotorcycleStatus.Rented;
         contract.Motorcycle.Mileage = request.BeforeInspection.Mileage;
-        contract.Motorcycle.UpdatedAt = DateTime.UtcNow;
+        contract.Motorcycle.UpdatedAt = SystemClock.Now;
 
         context.RentalInspections.Add(CreateInspection(contract.Id, InspectionType.BeforeRental, request.BeforeInspection, userId));
         await context.SaveChangesAsync();
@@ -135,6 +137,9 @@ public class RentalContractService : IRentalContractService
         if (contract.Status != RentalStatus.Active)
             throw new InvalidOperationException("Only active contracts can be completed");
 
+        if (!contract.Inspections.Any(i => i.InspectionType == InspectionType.BeforeRental))
+            throw new InvalidOperationException("BeforeRental inspection is required before completing a contract");
+
         if (contract.Inspections.Any(i => i.InspectionType == InspectionType.AfterReturn))
             throw new InvalidOperationException("AfterReturn inspection already exists");
 
@@ -144,8 +149,14 @@ public class RentalContractService : IRentalContractService
         if (contract.Motorcycle is null)
             throw new InvalidOperationException("Motorcycle not found");
 
+        var actualRentalDays = CalculateRentalDays(contract.StartDate, request.ActualReturnDate);
+        var plannedRentalDays = CalculateRentalDays(contract.StartDate, contract.EndDate);
+        var baseRentalDays = Math.Min(actualRentalDays, plannedRentalDays);
+
         contract.ActualReturnDate = request.ActualReturnDate.Date;
-        contract.LateDays = CalculateLateDays(contract.EndDate, request.ActualReturnDate);
+        contract.RentalDays = actualRentalDays;
+        contract.TotalAmount = baseRentalDays * contract.DailyPrice;
+        contract.LateDays = Math.Max(0, actualRentalDays - plannedRentalDays);
         contract.LateFee = contract.LateDays * contract.DailyPrice;
         contract.DamageFee = request.DamageFee;
         contract.DamageDescription = request.DamageDescription?.Trim();
@@ -162,16 +173,25 @@ public class RentalContractService : IRentalContractService
         contract.AdditionalPaymentAmount = contract.RemainingAmount > 0 ? contract.RemainingAmount : 0;
         contract.RefundAmount = contract.RemainingAmount < 0 ? Math.Abs(contract.RemainingAmount) : 0;
         contract.Status = RentalStatus.Completed;
-        contract.CompletedAt = DateTime.UtcNow;
+        contract.CompletedAt = SystemClock.Now;
         contract.CompletedByUserId = userId;
-        contract.UpdatedAt = DateTime.UtcNow;
+        contract.UpdatedAt = SystemClock.Now;
         contract.UpdatedByUserId = userId;
 
-        contract.Motorcycle.Status = request.MotorcycleStatusAfterReturn;
+        var requiresMaintenance = request.MotorcycleStatusAfterReturn == MotorcycleStatus.Maintenance ||
+                                  request.AfterInspection.HasDamage ||
+                                  request.DamageFee > 0;
+
+        contract.Motorcycle.Status = requiresMaintenance
+            ? MotorcycleStatus.Maintenance
+            : request.MotorcycleStatusAfterReturn;
         contract.Motorcycle.Mileage = request.AfterInspection.Mileage;
-        contract.Motorcycle.UpdatedAt = DateTime.UtcNow;
+        contract.Motorcycle.UpdatedAt = SystemClock.Now;
 
         context.RentalInspections.Add(CreateInspection(contract.Id, InspectionType.AfterReturn, request.AfterInspection, userId));
+
+        if (requiresMaintenance)
+            context.MaintenanceRecords.Add(CreateMaintenanceRecord(contract, request, userId));
 
         if (contract.AdditionalPaymentAmount > 0)
         {
@@ -211,16 +231,16 @@ public class RentalContractService : IRentalContractService
         contract.FinalAmount = 0;
         contract.RemainingAmount = depositPaid ? contract.CancellationFee - contract.DepositAmount : 0;
         contract.Status = RentalStatus.Cancelled;
-        contract.CancelledAt = DateTime.UtcNow;
+        contract.CancelledAt = SystemClock.Now;
         contract.CancelledByUserId = userId;
         contract.CancellationReason = request.Reason.Trim();
-        contract.UpdatedAt = DateTime.UtcNow;
+        contract.UpdatedAt = SystemClock.Now;
         contract.UpdatedByUserId = userId;
 
         if (contract.Motorcycle is not null)
         {
             contract.Motorcycle.Status = MotorcycleStatus.Available;
-            contract.Motorcycle.UpdatedAt = DateTime.UtcNow;
+            contract.Motorcycle.UpdatedAt = SystemClock.Now;
         }
 
         if (contract.RefundAmount > 0)
@@ -244,7 +264,7 @@ public class RentalContractService : IRentalContractService
         if (contract.Status != RentalStatus.Reserved)
             throw new InvalidOperationException("Only reserved contracts can be marked as NoShow");
 
-        if (DateTime.Today < contract.StartDate.Date)
+        if (SystemClock.Today < contract.StartDate.Date)
             throw new InvalidOperationException("Cannot mark NoShow before StartDate");
 
         var depositPaid = contract.Payments.Any(p => p.PaymentType == PaymentType.Deposit);
@@ -254,16 +274,16 @@ public class RentalContractService : IRentalContractService
         contract.FinalAmount = 0;
         contract.RemainingAmount = 0;
         contract.Status = RentalStatus.NoShow;
-        contract.NoShowAt = DateTime.UtcNow;
+        contract.NoShowAt = SystemClock.Now;
         contract.NoShowByUserId = userId;
         contract.NoShowReason = request.Reason.Trim();
-        contract.UpdatedAt = DateTime.UtcNow;
+        contract.UpdatedAt = SystemClock.Now;
         contract.UpdatedByUserId = userId;
 
         if (contract.Motorcycle is not null)
         {
             contract.Motorcycle.Status = MotorcycleStatus.Available;
-            contract.Motorcycle.UpdatedAt = DateTime.UtcNow;
+            contract.Motorcycle.UpdatedAt = SystemClock.Now;
         }
 
         await context.SaveChangesAsync();
@@ -334,7 +354,7 @@ public class RentalContractService : IRentalContractService
             DepositAmount = depositAmount,
             RentalDays = rentalDays,
             TotalAmount = rentalDays * dailyPrice,
-            CreatedAt = DateTime.UtcNow,
+            CreatedAt = SystemClock.Now,
             CreatedByUserId = userId,
             CreatedBy = userId?.ToString()
         };
@@ -354,7 +374,7 @@ public class RentalContractService : IRentalContractService
             ImageUrl = request.ImageUrl?.Trim(),
             Note = request.Note?.Trim(),
             CreatedByUserId = userId,
-            CreatedAt = DateTime.UtcNow
+            CreatedAt = SystemClock.Now
         };
 
     private static RentalPayment CreatePayment(int contractId, PaymentType type, decimal amount, PaymentMethod method, string? note, int? userId)
@@ -366,8 +386,45 @@ public class RentalContractService : IRentalContractService
             PaymentMethod = method,
             Note = note?.Trim(),
             CreatedByUserId = userId,
-            CreatedAt = DateTime.UtcNow
+            CreatedAt = SystemClock.Now
         };
+
+    private static MaintenanceRecord CreateMaintenanceRecord(RentalContract contract, CompleteRentalRequestDto request, int? userId)
+    {
+        var reason = request.AfterInspection.HasDamage || request.DamageFee > 0
+            ? "Damage found after rental return"
+            : "Motorcycle returned for maintenance";
+
+        var descriptionParts = new List<string>
+        {
+            $"Return inspection condition: {request.AfterInspection.VehicleCondition.Trim()}"
+        };
+
+        if (!string.IsNullOrWhiteSpace(request.DamageDescription))
+            descriptionParts.Add($"Damage fee note: {request.DamageDescription.Trim()}");
+
+        if (!string.IsNullOrWhiteSpace(request.AfterInspection.DamageDescription))
+            descriptionParts.Add($"Inspection damage: {request.AfterInspection.DamageDescription.Trim()}");
+
+        if (!string.IsNullOrWhiteSpace(request.AfterInspection.AccessoriesNote))
+            descriptionParts.Add($"Accessories: {request.AfterInspection.AccessoriesNote.Trim()}");
+
+        if (!string.IsNullOrWhiteSpace(request.AfterInspection.Note))
+            descriptionParts.Add($"Inspection note: {request.AfterInspection.Note.Trim()}");
+
+        return new MaintenanceRecord
+        {
+            MotorcycleId = contract.MotorcycleId,
+            RentalContractId = contract.Id,
+            Reason = reason,
+            Description = string.Join(Environment.NewLine, descriptionParts),
+            RepairCost = 0,
+            Status = MaintenanceStatus.Pending,
+            StartDate = SystemClock.Today,
+            CreatedByUserId = userId,
+            CreatedAt = SystemClock.Now
+        };
+    }
 
     private static void ValidateDepositConfirmation(bool depositConfirmed)
     {
@@ -389,13 +446,19 @@ public class RentalContractService : IRentalContractService
 
     private static void ValidateAdvanceBookingLimit(DateTime startDate)
     {
-        if (startDate.Date > DateTime.Today.AddDays(MaxAdvanceBookingDays))
+        if (startDate.Date > SystemClock.Today.AddDays(MaxAdvanceBookingDays))
             throw new InvalidOperationException($"StartDate cannot be more than {MaxAdvanceBookingDays} days from today");
+    }
+
+    private static void ValidateReservationStartDate(DateTime startDate)
+    {
+        if (startDate.Date < SystemClock.Today)
+            throw new InvalidOperationException("StartDate cannot be in the past");
     }
 
     private static void ValidateRentNowStartDate(DateTime startDate)
     {
-        if (startDate.Date != DateTime.Today)
+        if (startDate.Date != SystemClock.Today)
             throw new InvalidOperationException("Rent-now contract must start today");
     }
 
@@ -449,7 +512,4 @@ public class RentalContractService : IRentalContractService
 
     private static int CalculateRentalDays(DateTime startDate, DateTime endDate)
         => Math.Max(1, (endDate.Date - startDate.Date).Days + 1);
-
-    private static int CalculateLateDays(DateTime endDate, DateTime actualReturnDate)
-        => actualReturnDate.Date > endDate.Date ? (actualReturnDate.Date - endDate.Date).Days : 0;
 }

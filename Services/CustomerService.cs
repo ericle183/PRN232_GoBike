@@ -1,3 +1,4 @@
+using BusinessObjects;
 using BusinessObjects.Entities;
 using Repositories;
 using Services.Interfaces;
@@ -50,7 +51,7 @@ public class CustomerService : ICustomerService
             throw new InvalidOperationException("Driver license number already exists in the system");
         }
 
-        customer.UpdatedAt = DateTime.UtcNow;
+        customer.UpdatedAt = SystemClock.Now;
         customerRepository.Update(customer);
     }
 
@@ -63,7 +64,7 @@ public class CustomerService : ICustomerService
             ?? throw new InvalidOperationException($"Customer with ID {id} not found");
 
         customer.IsActive = false;
-        customer.UpdatedAt = DateTime.UtcNow;
+        customer.UpdatedAt = SystemClock.Now;
         customerRepository.Update(customer);
     }
 
@@ -73,7 +74,7 @@ public class CustomerService : ICustomerService
             ?? throw new InvalidOperationException($"Customer with ID {id} not found");
 
         customer.IsActive = true;
-        customer.UpdatedAt = DateTime.UtcNow;
+        customer.UpdatedAt = SystemClock.Now;
         customerRepository.Update(customer);
     }
 
@@ -99,8 +100,8 @@ public class CustomerService : ICustomerService
             throw new InvalidOperationException("DriverLicenseNo is required");
         }
 
-        var age = DateTime.Today.Year - customer.DateOfBirth.Year -
-                  (customer.DateOfBirth.Date > DateTime.Today.AddYears(-(DateTime.Today.Year - customer.DateOfBirth.Year)) ? 1 : 0);
+        var age = SystemClock.Today.Year - customer.DateOfBirth.Year -
+                  (customer.DateOfBirth.Date > SystemClock.Today.AddYears(-(SystemClock.Today.Year - customer.DateOfBirth.Year)) ? 1 : 0);
         if (age < 18)
         {
             throw new InvalidOperationException("Customer must be at least 18 years old");

@@ -1,5 +1,6 @@
 using System.ComponentModel.DataAnnotations;
 using System.ComponentModel.DataAnnotations.Schema;
+using BusinessObjects;
 using BusinessObjects.Enums;
 
 namespace BusinessObjects.Entities;
@@ -31,8 +32,8 @@ public class Customer
     public DateTime DateOfBirth { get; set; }
 
     [NotMapped]
-    public int Age => DateTime.Today.Year - DateOfBirth.Year -
-        (DateOfBirth.Date > DateTime.Today.AddYears(-(DateTime.Today.Year - DateOfBirth.Year)) ? 1 : 0);
+    public int Age => SystemClock.Today.Year - DateOfBirth.Year -
+        (DateOfBirth.Date > SystemClock.Today.AddYears(-(SystemClock.Today.Year - DateOfBirth.Year)) ? 1 : 0);
 
     [Required]
     [MaxLength(20)]
@@ -40,7 +41,7 @@ public class Customer
 
     public bool IsActive { get; set; } = true;
 
-    public DateTime CreatedAt { get; set; } = DateTime.UtcNow;
+    public DateTime CreatedAt { get; set; } = SystemClock.Now;
 
     public DateTime? UpdatedAt { get; set; }
 

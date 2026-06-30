@@ -1,4 +1,5 @@
 using System.ComponentModel.DataAnnotations;
+using BusinessObjects;
 
 namespace BusinessObjects.Entities;
 
@@ -28,7 +29,7 @@ public class User
 
     public bool IsActive { get; set; } = true;
 
-    public DateTime CreatedAt { get; set; } = DateTime.UtcNow;
+    public DateTime CreatedAt { get; set; } = SystemClock.Now;
 
     public DateTime? UpdatedAt { get; set; }
 }

@@ -1,3 +1,4 @@
+using BusinessObjects;
 using BusinessObjects.DTOs;
 using BusinessObjects.Entities;
 using BusinessObjects.Enums;
@@ -48,7 +49,7 @@ public class UserService : IUserService
             Email = string.IsNullOrWhiteSpace(request.Email) ? null : request.Email.Trim(),
             Role = UserRole.Staff,
             IsActive = request.IsActive,
-            CreatedAt = DateTime.UtcNow
+            CreatedAt = SystemClock.Now
         };
 
         await userRepository.AddAsync(user);
@@ -64,7 +65,7 @@ public class UserService : IUserService
         user.FullName = request.FullName.Trim();
         user.Email = string.IsNullOrWhiteSpace(request.Email) ? null : request.Email.Trim();
         user.IsActive = request.IsActive;
-        user.UpdatedAt = DateTime.UtcNow;
+        user.UpdatedAt = SystemClock.Now;
 
         if (!string.IsNullOrWhiteSpace(request.Password))
             user.PasswordHash = BCrypt.Net.BCrypt.HashPassword(request.Password, workFactor: 11);

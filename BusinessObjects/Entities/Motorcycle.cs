@@ -1,5 +1,6 @@
 using System.ComponentModel.DataAnnotations;
 using System.ComponentModel.DataAnnotations.Schema;
+using BusinessObjects;
 using BusinessObjects.Enums;
 
 namespace BusinessObjects.Entities;
@@ -39,7 +40,7 @@ public class Motorcycle
 
     public bool IsActive { get; set; } = true;
 
-    public DateTime CreatedAt { get; set; } = DateTime.UtcNow;
+    public DateTime CreatedAt { get; set; } = SystemClock.Now;
 
     public DateTime? UpdatedAt { get; set; }
 

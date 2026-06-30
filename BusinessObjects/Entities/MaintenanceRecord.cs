@@ -1,5 +1,6 @@
 using System.ComponentModel.DataAnnotations;
 using System.ComponentModel.DataAnnotations.Schema;
+using BusinessObjects;
 using BusinessObjects.Enums;
 
 namespace BusinessObjects.Entities;
@@ -25,13 +26,13 @@ public class MaintenanceRecord
 
     public MaintenanceStatus Status { get; set; } = MaintenanceStatus.Pending;
 
-    public DateTime StartDate { get; set; } = DateTime.UtcNow;
+    public DateTime StartDate { get; set; } = SystemClock.Today;
 
     public DateTime? EndDate { get; set; }
 
     public int? CreatedByUserId { get; set; }
 
-    public DateTime CreatedAt { get; set; } = DateTime.UtcNow;
+    public DateTime CreatedAt { get; set; } = SystemClock.Now;
 
     public int? UpdatedByUserId { get; set; }
 
