@@ -1,4 +1,4 @@
-using BusinessObjects.Entities;
+﻿using BusinessObjects.Entities;
 using DataAccessObjects;
 using Microsoft.AspNetCore.OData;
 using Microsoft.AspNetCore.Authentication.Cookies;
@@ -83,7 +83,7 @@ var app = builder.Build();
 using (var scope = app.Services.CreateScope())
 {
     var context = scope.ServiceProvider.GetRequiredService<AppDbContext>();
-    context.Database.Migrate();
+    //context.Database.Migrate();
 }
 
 if (app.Environment.IsDevelopment())
